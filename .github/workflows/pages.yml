@@ -1,0 +1,21 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v4
+      - run: |
+          cp simulator.html docs/index.html
+        shell: bash
+      - uses: actions/upload-pages-artifact@v1
+        with:
+          path: docs
+      - uses: actions/deploy-pages@v1

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tennis Simulator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f7fb;
+      color: #1a1a1a;
+    }
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      padding: 30px;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 2rem;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .card {
+      flex: 1 1 280px;
+      background: #f9fbff;
+      border: 1px solid #dde7f0;
+      border-radius: 12px;
+      padding: 18px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    select, input[type="range"], input[type="text"], button {
+      width: 100%;
+      font-size: 1rem;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e0;
+      box-sizing: border-box;
+    }
+    button {
+      background: #1f64ff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    button:hover {
+      background: #174cd3;
+    }
+    #results {
+      min-height: 180px;
+      border: 1px solid #cbd5e0;
+      border-radius: 12px;
+      padding: 18px;
+      background: #eef4ff;
+      white-space: pre-wrap;
+    }
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Tennis Simulator</h1>
+    <p>Experiment with serve and return strategy, then simulate a rally or a whole match. Open <strong>simulator.html</strong> in your browser for a quick interactive demo.</p>
+
+    <div class="row">
+      <div class="card">
+        <label for="playerName">Player name</label>
+        <input id="playerName" type="text" value="Player" />
+
+        <label for="opponentName">Opponent name</label>
+        <input id="opponentName" type="text" value="Opponent" />
+
+        <label for="serveType">Serve type</label>
+        <select id="serveType">
+          <option value="flat">Flat serve</option>
+          <option value="slice">Slice serve</option>
+          <option value="kick">Kick serve</option>
+        </select>
+
+        <label for="returnType">Return strategy</label>
+        <select id="returnType">
+          <option value="aggressive">Aggressive return</option>
+          <option value="steady">Steady return</option>
+          <option value="defensive">Defensive return</option>
+        </select>
+      </div>
+      <div class="card">
+        <label for="serveSpeed">Serve speed</label>
+        <input id="serveSpeed" type="range" min="70" max="130" value="100" />
+        <div class="stat"><span>Speed</span><span id="speedValue">100 km/h</span></div>
+
+        <label for="spinIntensity">Spin intensity</label>
+        <input id="spinIntensity" type="range" min="0" max="100" value="35" />
+        <div class="stat"><span>Spin</span><span id="spinValue">35%</span></div>
+
+        <label for="playerConfidence">Confidence</label>
+        <input id="playerConfidence" type="range" min="0" max="100" value="70" />
+        <div class="stat"><span>Confidence</span><span id="confidenceValue">70%</span></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <button id="simulatePoint">Simulate point</button>
+      <button id="simulateMatch">Simulate best of 3</button>
+    </div>
+
+    <div id="results">Press a button to simulate a point or match.</div>
+  </main>
+
+  <script>
+    const playerNameInput = document.getElementById('playerName');
+    const opponentNameInput = document.getElementById('opponentName');
+    const serveTypeSelect = document.getElementById('serveType');
+    const returnTypeSelect = document.getElementById('returnType');
+    const speedSlider = document.getElementById('serveSpeed');
+    const spinSlider = document.getElementById('spinIntensity');
+    const confidenceSlider = document.getElementById('playerConfidence');
+    const speedValue = document.getElementById('speedValue');
+    const spinValue = document.getElementById('spinValue');
+    const confidenceValue = document.getElementById('confidenceValue');
+    const results = document.getElementById('results');
+    const simulatePointBtn = document.getElementById('simulatePoint');
+    const simulateMatchBtn = document.getElementById('simulateMatch');
+
+    const serveEffects = {
+      flat: { accuracy: 0.9, power: 0.98, spin: 0.2 },
+      slice: { accuracy: 0.95, power: 0.85, spin: 0.68 },
+      kick: { accuracy: 0.9, power: 0.78, spin: 0.9 }
+    };
+
+    const returnEffects = {
+      aggressive: { consistency: 0.78, pressure: 0.95 },
+      steady: { consistency: 0.92, pressure: 0.78 },
+      defensive: { consistency: 0.96, pressure: 0.6 }
+    };
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function randomBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function formatPercent(value) {
+      return `${Math.round(value * 100)}%`;
+    }
+
+    function simulatePoint() {
+      const player = playerNameInput.value || 'Player';
+      const opponent = opponentNameInput.value || 'Opponent';
+      const serveType = serveTypeSelect.value;
+      const returnType = returnTypeSelect.value;
+      const speed = Number(speedSlider.value);
+      const spin = Number(spinSlider.value) / 100;
+      const confidence = Number(confidenceSlider.value) / 100;
+
+      const serve = serveEffects[serveType];
+      const ret = returnEffects[returnType];
+
+      const servePower = clamp((speed / 130) * serve.power, 0, 1);
+      const serveAccuracy = clamp(serve.accuracy - (0.3 * spin) + randomBetween(-0.05, 0.05), 0, 1);
+      const returnChance = clamp(ret.consistency * (1 - servePower * 0.35) + randomBetween(-0.08, 0.08), 0.05, 0.98);
+      const servePressure = clamp(serve.spin * spin * 0.6 + confidence * 0.3, 0, 1);
+      const opponentPressure = clamp(ret.pressure + randomBetween(-0.05, 0.05), 0, 1);
+
+      const serveIn = Math.random() < serveAccuracy;
+      let text = `Serve: ${serveType} | Speed: ${speed} km/h | Spin: ${Math.round(spin * 100)}%\n`;
+
+      if (!serveIn) {
+        text += `Result: ${player} faults on serve. ${opponent} wins the point.`;
+        return { winner: opponent, text };
+      }
+
+      const returnSuccess = Math.random() < returnChance;
+      if (!returnSuccess) {
+        text += `Result: ${opponent} misses the return. ${player} wins the point.`;
+        return { winner: player, text };
+      }
+
+      const rallyStrength = servePower * servePressure + ret.consistency * opponentPressure + confidence * 0.2;
+      const rallyRandom = randomBetween(0, 1);
+      const rally = rallyStrength + (rallyRandom - 0.5) * 0.3;
+
+      if (rally > 0.52) {
+        text += `Result: ${player} constructs the rally and wins with a smart winner.`;
+        return { winner: player, text };
+      }
+
+      if (rally < 0.42) {
+        text += `Result: ${opponent} takes command and finishes the point.`;
+        return { winner: opponent, text };
+      }
+
+      text += `Result: Long rally, but ${player} keeps control and closes the point.`;
+      return { winner: player, text };
+    }
+
+    function updateLabels() {
+      speedValue.textContent = `${speedSlider.value} km/h`;
+      spinValue.textContent = `${spinSlider.value}%`;
+      confidenceValue.textContent = `${confidenceSlider.value}%`;
+    }
+
+    function simulateMatch() {
+      const score = { player: 0, opponent: 0 };
+      const history = [];
+      while (score.player < 2 && score.opponent < 2) {
+        const result = simulatePoint();
+        history.push(result.text);
+        if (result.winner === 'Opponent') {
+          score.opponent += 1;
+        } else {
+          score.player += 1;
+        }
+      }
+      const winner = score.player > score.opponent ? playerNameInput.value || 'Player' : opponentNameInput.value || 'Opponent';
+      return `Best-of-3 simulation:\n${history.join('\n\n')}\n\nMatch score: ${score.player} - ${score.opponent}\nWinner: ${winner}`;
+    }
+
+    speedSlider.addEventListener('input', updateLabels);
+    spinSlider.addEventListener('input', updateLabels);
+    confidenceSlider.addEventListener('input', updateLabels);
+
+    simulatePointBtn.addEventListener('click', () => {
+      const result = simulatePoint();
+      results.textContent = result.text;
+    });
+
+    simulateMatchBtn.addEventListener('click', () => {
+      results.textContent = simulateMatch();
+    });
+
+    updateLabels();
+  </script>
+</body>
+</html>
