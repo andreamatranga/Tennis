@@ -15,7 +15,7 @@ jobs:
       - run: |
           cp simulator.html docs/index.html
         shell: bash
-      - uses: actions/upload-pages-artifact@v1
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: docs
       - uses: actions/deploy-pages@v1
