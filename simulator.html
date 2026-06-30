@@ -59,25 +59,24 @@
     <div class="ctl"><label>Opp. reach (m)</label><div class="row"><input type="range" id="orr" min="0.3" max="2.0" step="0.1" value="1.0"><span class="val" id="orrOut">1.0</span></div></div>
   </div>
 
-  <div class="toggles">
-    <label><input type="checkbox" id="serve"> Serve mode</label>
-    <label><input type="checkbox" id="iso"> Ball isochrones</label>
-    <label><input type="checkbox" id="opp"> Add opponent (difference map) checked</label>
-  </div>
+<div class="toggles">
+  <label><input type="checkbox" id="serve"> Serve mode</label>
+  <label><input type="checkbox" id="iso"> Ball isochrones</label>
+  <label><input type="checkbox" id="opp" checked> Add opponent (difference map)</label>
+</div>
 
-  <div class="toggles" style="margin-top:-2px;">
-    <span style="color:var(--muted);">Color points where the ball:</span>
-    <label><input type="radio" name="mode" id="modePass" value="pass" > passes (air or roll)</label>
-    <label><input type="radio" name="mode" id="modeBounce" value="bounce" checked> bounces</label>
-  </div>
+<div class="toggles" style="margin-top:-2px;">
+  <span style="color:var(--muted);">Color points where the ball:</span>
+  <label><input type="radio" name="mode" id="modePass" value="pass"> passes (air or roll)</label>
+  <label><input type="radio" name="mode" id="modeBounce" value="bounce" checked> bounces</label>
+</div>
 
-  <div class="toggles" id="powerModes" style="margin-top:-2px; display:none;">
-    <span style="color:var(--muted);">Shot power to each spot:</span>
-    <label><input type="radio" name="pmode" id="pmodeExact" value="exact" > exact-fit</label>
-    <label><input type="radio" name="pmode" id="pmodeMax" value="max"> max power checked </label>
-    <label><input type="radio" name="pmode" id="pmodeMin" value="min"> min to clear net</label>
-  </div>
-
+<div class="toggles" id="powerModes" style="margin-top:-2px; display:none;">
+  <span style="color:var(--muted);">Shot power to each spot:</span>
+  <label><input type="radio" name="pmode" id="pmodeExact" value="exact"> exact-fit</label>
+  <label><input type="radio" name="pmode" id="pmodeMax" value="max" checked> max power</label>
+  <label><input type="radio" name="pmode" id="pmodeMin" value="min"> min to clear net</label>
+</div>
   <div class="hint" id="hintBall">Drag the <b style="color:var(--accent)">blue dot</b> (you). Color = <b>fastest ball arrival in seconds</b>. The visible area includes the <b>doubles court, side tramlines, and back/side outfields</b>. In <b>bounces</b> mode, hover any cell to see that shot's trajectory and its 45° shadow. Enable the opponent to switch to a difference map.</div>
   <div class="hint" id="hintOpp" style="display:none;"><b>Left-drag</b> the <b style="color:var(--opp)">coral dot</b> to move the opponent; <b>right-drag</b> to aim his velocity (direction and speed). A point is a <b>winner</b> (green) only if some legal ball reaches it that he <b>cannot intercept</b> within his <b>reach</b> before the ball's second bounce or it leaves the court; otherwise it's <b style="color:#d24a45">red</b> (his). <b>Hover</b> any cell to preview his best intercept run; <b>left-click</b> a cell to play the exchange in real time.</div>
 
