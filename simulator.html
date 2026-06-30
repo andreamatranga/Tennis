@@ -1,255 +1,901 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tennis Simulator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f4f7fb;
-      color: #1a1a1a;
-    }
-    main {
-      max-width: 900px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-      padding: 30px;
-    }
-    h1 {
-      margin-top: 0;
-      font-size: 2rem;
-    }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-    .card {
-      flex: 1 1 280px;
-      background: #f9fbff;
-      border: 1px solid #dde7f0;
-      border-radius: 12px;
-      padding: 18px;
-    }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-    select, input[type="range"], input[type="text"], button {
-      width: 100%;
-      font-size: 1rem;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e0;
-      box-sizing: border-box;
-    }
-    button {
-      background: #1f64ff;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-    button:hover {
-      background: #174cd3;
-    }
-    #results {
-      min-height: 180px;
-      border: 1px solid #cbd5e0;
-      border-radius: 12px;
-      padding: 18px;
-      background: #eef4ff;
-      white-space: pre-wrap;
-    }
-    .stat {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tennis Shot Reach Simulator</title>
+<style>
+  :root{
+    --bg:#faf9f5; --panel:#ffffff; --ink:#1a1a18; --muted:#6b6a64; --hint:#94938c;
+    --border:#e3e1d8; --accent:#185fa5; --opp:#993c1d;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1f1e1c; --panel:#2a2926; --ink:#ecebe6; --muted:#a8a69d; --hint:#807e76;
+      --border:#3a3935; --accent:#5da0e8; --opp:#d8744a; }
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:860px; margin:0 auto; padding:24px 18px 48px; }
+  h1{ font-size:22px; font-weight:500; margin:0 0 4px; }
+  .sub{ color:var(--muted); font-size:14px; margin:0 0 20px; }
+  .controls{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:14px; }
+  .ctl label{ font-size:13px; color:var(--muted); display:block; margin-bottom:5px; }
+  .row{ display:flex; align-items:center; gap:8px; }
+  input[type=range]{ flex:1; accent-color:var(--accent); height:4px; }
+  .val{ font-size:13px; font-weight:500; min-width:34px; text-align:right; }
+  .toggles{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; font-size:13px; margin-bottom:10px; }
+  .toggles label{ display:flex; align-items:center; gap:6px; color:var(--muted); cursor:pointer; }
+  .hint{ font-size:12px; color:var(--hint); margin-bottom:10px; line-height:1.5; }
+  .hint b{ color:var(--ink); font-weight:600; }
+  canvas#court{ width:100%; border-radius:12px; border:0.5px solid var(--border); display:block; touch-action:none; }
+  canvas#cbar{ width:100%; height:46px; display:block; margin-top:10px; }
+  .legend{ display:flex; align-items:center; gap:14px; margin-top:8px; flex-wrap:wrap; font-size:12px; color:var(--muted); }
+  .sw{ display:inline-block; vertical-align:middle; }
+  .cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-top:18px; }
+  .card{ background:var(--panel); border:0.5px solid var(--border); border-radius:12px; padding:14px 16px; }
+  .card .lab{ font-size:13px; color:var(--muted); }
+  .card .num{ font-size:24px; font-weight:500; margin-top:2px; }
+  footer{ margin-top:28px; font-size:12px; color:var(--hint); line-height:1.6; }
+  .busy{ color:var(--hint); }
+</style>
 </head>
 <body>
-  <main>
-    <h1>Tennis Simulator</h1>
-    <p>Experiment with serve and return strategy, then simulate a rally or a whole match. Open <strong>simulator.html</strong> in your browser for a quick interactive demo.</p>
+<div class="wrap">
+  <h1>Tennis shot reach simulator</h1>
+  <p class="sub">Sweeps every legal trajectory up to your power ceiling, maps the fastest time the ball can reach each point, and (optionally) races it against a movable opponent.</p>
 
-    <div class="row">
-      <div class="card">
-        <label for="playerName">Player name</label>
-        <input id="playerName" type="text" value="Player" />
+  <div class="controls">
+    <div class="ctl"><label>Hit height (m)</label><div class="row"><input type="range" id="h" min="0.3" max="3.5" step="0.1" value="0.9"><span class="val" id="hOut">0.9</span></div></div>
+    <div class="ctl"><label>Max power (m/s)</label><div class="row"><input type="range" id="v" min="6" max="65" step="1" value="38"><span class="val" id="vOut">38</span></div></div>
+    <div class="ctl"><label>Max reach height (m)</label><div class="row"><input type="range" id="rh" min="1.0" max="3.5" step="0.1" value="2.6"><span class="val" id="rhOut">2.6</span></div></div>
+  </div>
 
-        <label for="opponentName">Opponent name</label>
-        <input id="opponentName" type="text" value="Opponent" />
+  <div class="controls" id="oppControls" style="display:none;">
+    <div class="ctl"><label>Opp. run speed (m/s)</label><div class="row"><input type="range" id="os" min="3" max="9" step="0.1" value="6"><span class="val" id="osOut">6.0</span></div></div>
+    <div class="ctl"><label>Opp. reaction (s)</label><div class="row"><input type="range" id="orx" min="0" max="0.6" step="0.05" value="0.2"><span class="val" id="orxOut">0.20</span></div></div>
+    <div class="ctl"><label>Opp. accel (m/s²)</label><div class="row"><input type="range" id="oa" min="3" max="20" step="0.5" value="8"><span class="val" id="oaOut">8.0</span></div></div>
+    <div class="ctl"><label>Opp. reach (m)</label><div class="row"><input type="range" id="orr" min="0.3" max="2.0" step="0.1" value="1.0"><span class="val" id="orrOut">1.0</span></div></div>
+  </div>
 
-        <label for="serveType">Serve type</label>
-        <select id="serveType">
-          <option value="flat">Flat serve</option>
-          <option value="slice">Slice serve</option>
-          <option value="kick">Kick serve</option>
-        </select>
+  <div class="toggles">
+    <label><input type="checkbox" id="serve"> Serve mode</label>
+    <label><input type="checkbox" id="iso"> Ball isochrones</label>
+    <label><input type="checkbox" id="opp"> Add opponent (difference map)</label>
+  </div>
 
-        <label for="returnType">Return strategy</label>
-        <select id="returnType">
-          <option value="aggressive">Aggressive return</option>
-          <option value="steady">Steady return</option>
-          <option value="defensive">Defensive return</option>
-        </select>
-      </div>
-      <div class="card">
-        <label for="serveSpeed">Serve speed</label>
-        <input id="serveSpeed" type="range" min="70" max="130" value="100" />
-        <div class="stat"><span>Speed</span><span id="speedValue">100 km/h</span></div>
+  <div class="toggles" style="margin-top:-2px;">
+    <span style="color:var(--muted);">Color points where the ball:</span>
+    <label><input type="radio" name="mode" id="modePass" value="pass" checked> passes (air or roll)</label>
+    <label><input type="radio" name="mode" id="modeBounce" value="bounce"> bounces</label>
+  </div>
 
-        <label for="spinIntensity">Spin intensity</label>
-        <input id="spinIntensity" type="range" min="0" max="100" value="35" />
-        <div class="stat"><span>Spin</span><span id="spinValue">35%</span></div>
+  <div class="toggles" id="powerModes" style="margin-top:-2px; display:none;">
+    <span style="color:var(--muted);">Shot power to each spot:</span>
+    <label><input type="radio" name="pmode" id="pmodeExact" value="exact" checked> exact-fit</label>
+    <label><input type="radio" name="pmode" id="pmodeMax" value="max"> max power</label>
+    <label><input type="radio" name="pmode" id="pmodeMin" value="min"> min to clear net</label>
+  </div>
 
-        <label for="playerConfidence">Confidence</label>
-        <input id="playerConfidence" type="range" min="0" max="100" value="70" />
-        <div class="stat"><span>Confidence</span><span id="confidenceValue">70%</span></div>
-      </div>
-    </div>
+  <div class="hint" id="hintBall">Drag the <b style="color:var(--accent)">blue dot</b> (you). Color = <b>fastest ball arrival in seconds</b>. The visible area includes the <b>doubles court, side tramlines, and back/side outfields</b>. In <b>bounces</b> mode, hover any cell to see that shot's trajectory and its 45° shadow. Enable the opponent to switch to a difference map.</div>
+  <div class="hint" id="hintOpp" style="display:none;"><b>Left-drag</b> the <b style="color:var(--opp)">coral dot</b> to move the opponent; <b>right-drag</b> to aim his velocity (direction and speed). A point is a <b>winner</b> (green) only if some legal ball reaches it that he <b>cannot intercept</b> within his <b>reach</b> before the ball's second bounce or it leaves the court; otherwise it's <b style="color:#d24a45">red</b> (his). <b>Hover</b> any cell to preview his best intercept run; <b>left-click</b> a cell to play the exchange in real time.</div>
 
-    <div class="row">
-      <button id="simulatePoint">Simulate point</button>
-      <button id="simulateMatch">Simulate best of 3</button>
-    </div>
+  <canvas id="court"></canvas>
+  <canvas id="cbar"></canvas>
 
-    <div id="results">Press a button to simulate a point or match.</div>
-  </main>
+  <div class="legend">
+    <span><span class="sw" style="width:9px;height:9px;border:1.5px solid #0c447c;border-radius:50%;"></span> air intercept</span>
+    <span><span class="sw" style="width:14px;height:14px;border-radius:3px;background:#ddd;"></span> no legal shot</span>
+    <span class="busy" id="busy"></span>
+  </div>
 
-  <script>
-    const playerNameInput = document.getElementById('playerName');
-    const opponentNameInput = document.getElementById('opponentName');
-    const serveTypeSelect = document.getElementById('serveType');
-    const returnTypeSelect = document.getElementById('returnType');
-    const speedSlider = document.getElementById('serveSpeed');
-    const spinSlider = document.getElementById('spinIntensity');
-    const confidenceSlider = document.getElementById('playerConfidence');
-    const speedValue = document.getElementById('speedValue');
-    const spinValue = document.getElementById('spinValue');
-    const confidenceValue = document.getElementById('confidenceValue');
-    const results = document.getElementById('results');
-    const simulatePointBtn = document.getElementById('simulatePoint');
-    const simulateMatchBtn = document.getElementById('simulateMatch');
+  <div class="cards">
+    <div class="card"><div class="lab" id="lab1">Reachable area</div><div class="num" id="m1">—</div></div>
+    <div class="card"><div class="lab" id="lab2">Fastest arrival</div><div class="num" id="m2">—</div></div>
+    <div class="card"><div class="lab" id="lab3">Slowest reachable</div><div class="num" id="m3">—</div></div>
+  </div>
 
-    const serveEffects = {
-      flat: { accuracy: 0.9, power: 0.98, spin: 0.2 },
-      slice: { accuracy: 0.95, power: 0.85, spin: 0.68 },
-      kick: { accuracy: 0.9, power: 0.78, spin: 0.9 }
-    };
+  <footer>
+    Model: drag-free parabolic flight, net-height interpolated across the width (lower at centre, higher at the posts), first bounce must land in the singles court (or service box in serve mode), with restitution-damped bounces after. Every speed from ~3 m/s up to the ceiling and a full fan of aim targets are swept; each cell keeps the single fastest arrival, air or post-bounce. The opponent's reach uses a reaction delay, finite acceleration, capped run speed, and his initial momentum. Spin, air drag, and 3D racket geometry are not modeled.
+  </footer>
+</div>
 
-    const returnEffects = {
-      aggressive: { consistency: 0.78, pressure: 0.95 },
-      steady: { consistency: 0.92, pressure: 0.78 },
-      defensive: { consistency: 0.96, pressure: 0.6 }
-    };
+<script>
+(function(){
+  const cv=document.getElementById('court'), ctx=cv.getContext('2d');
+  const cbar=document.getElementById('cbar'), cbx=cbar.getContext('2d');
+  const L=23.77, W=8.23, NET_X=L/2, SERVICE=6.40;
+  const DOUBLES_W=10.97, ALLEY=(DOUBLES_W-W)/2;
+  const NET_H=0.914, NET_H_POST=1.07, g=9.81, REST=0.73;
+  const VMIN=3, RUNBACK=6.40, SIDE=2.0;
+  const MAX_LAUNCH=60*Math.PI/180;   // cap launch angle: realistic lobs only, no moon-balls
+  const VX0=-RUNBACK, VX1=L+RUNBACK;
+  const VY0=-(ALLEY+SIDE), VY1=W+ALLEY+SIDE;
+  const FAR0=NET_X, FAR1=L+RUNBACK;
+  function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+  const state={ you:{x:2.0,y:W/2}, opp:{x:20.5,y:W/2}, oppVel:{x:0,y:0} };
+  let geom={};
+  const GX=140, GY=72;
+  const TXF=24, TYF=30, NS_FULL=22;
+  const TXL=12, TYL=16, NS_LOW=11;
+  const T_LO=0.0, T_HI=3.0, D_LO=-1.0, D_HI=1.0;
+  const DPR=window.devicePixelRatio||1;
 
-    function clamp(value, min, max) {
-      return Math.max(min, Math.min(max, value));
+  function resize(){
+    const wpx=cv.clientWidth||cv.parentElement.clientWidth;
+    const aspect=(VY1-VY0)/((VX1-VX0));
+    cv.width=wpx*DPR; cv.height=wpx*aspect*DPR; cv.style.height=(wpx*aspect)+'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    cbar.width=wpx*DPR; cbar.height=46*DPR; cbx.setTransform(DPR,0,0,DPR,0,0);
+    computeGeom(); draw(true);
+  }
+  function computeGeom(){const pw=cv.width/DPR,ph=cv.height/DPR,mx=12,my=12;geom={mx,my,sx:(pw-2*mx)/(VX1-VX0),sy:(ph-2*my)/(VY1-VY0),pw,ph};}
+  function toPx(cx,cy){return{px:geom.mx+(cx-VX0)*geom.sx,py:geom.my+(cy-VY0)*geom.sy};}
+  function toCourt(px,py){return{x:(px-geom.mx)/geom.sx+VX0,y:(py-geom.my)/geom.sy+VY0};}
+  function netHeightAt(y){const cy=Math.max(0,Math.min(W,y));const f=Math.abs(cy-W/2)/(W/2);return NET_H+(NET_H_POST-NET_H)*f;}
+  // Does a shot from (sx,sy,h) heading (ux,uy) with horiz/vert speed (vh,vv) clear the net?
+  function clearsNet(sx,sy,h,ux,uy,vh,vv){
+    const g=9.81;
+    if(Math.sign(sx-NET_X)===Math.sign((sx+ux)-NET_X) && ux===0) return true;
+    const dxNet=NET_X-sx;
+    if(ux*vh===0) return true;
+    const tNet=dxNet/(ux*vh);
+    if(tNet<=0) return true;                      // net behind the shot direction
+    const zNet=h+vv*tNet-0.5*g*tNet*tNet;
+    const yNet=sy+uy*vh*tNet;
+    return zNet>=netHeightAt(yNet);
+  }
+
+  let timeGrid=null, airGrid=null, oppGrid=null, oppOwnGrid=null, shotGrid=null;
+
+  function anglesFor(d,h,v){
+    const k=g*d*d/(2*v*v); const a=k,b=-d,c=k-h, disc=b*b-4*a*c;
+    if(disc<0) return [];
+    const s=Math.sqrt(disc);
+    return [(-b+s)/(2*a), (-b-s)/(2*a)].map(u=>Math.atan(u));
+  }
+
+  function computeBall(vmax,h,reachH,serveMode,quality,oppCtx,MODE,PMODE){
+    const TX=quality?TXF:TXL, TY=quality?TYF:TYL, NS=quality?NS_FULL:NS_LOW;
+    timeGrid=new Float32Array(GX*GY).fill(-1);
+    airGrid=new Uint8Array(GX*GY);
+    oppOwnGrid=new Float32Array(GX*GY).fill(-1);   // earliest time opponent can take the ball
+    shotGrid=new Array(GX*GY).fill(null);          // winning shot params per bounce cell (hover)
+    const yx=state.you.x, yy=state.you.y;
+    const cellW=(FAR1-FAR0)/GX, cellH=(VY1-VY0)/GY;
+    const dt=quality?0.004:0.006;
+    // With an opponent, a point is a WINNER only if some legal trajectory reaches it such
+    // that the opponent cannot intercept that ball ANYWHERE along its whole path (before,
+    // at, or after that point). If along a trajectory the opponent can first take the ball
+    // at time t*, then every sample of that trajectory at time >= t* is HIS — those cells
+    // are marked in oppOwnGrid (red) instead of counting as wins.
+    const HAS_OPP=!!oppCtx;
+    function interceptTime(x,y,z){
+      // earliest clock time the opponent can be at (x,y) within reach height; +inf if never
+      if(z>oppCtx.reachH) return Infinity;
+      return oppTime(x,y,oppCtx.vmax,oppCtx.react,oppCtx.accel,oppCtx.reach);
     }
 
-    function randomBetween(min, max) {
-      return Math.random() * (max - min) + min;
+    function record(x,y,t,isAir,shot){
+      if(x<FAR0||x>FAR1||y<VY0||y>VY1) return;
+      const ix=Math.floor((x-FAR0)/cellW), iy=Math.floor((y-VY0)/cellH);
+      if(ix<0||ix>=GX||iy<0||iy>=GY) return;
+      const idx=ix*GY+iy;
+      if(timeGrid[idx]<0 || t<timeGrid[idx]){ timeGrid[idx]=t; airGrid[idx]=isAir?1:0; if(shot) shotGrid[idx]=shot; }
     }
-
-    function formatPercent(value) {
-      return `${Math.round(value * 100)}%`;
+    function recordOwn(x,y,t,shot){
+      if(x<FAR0||x>FAR1||y<VY0||y>VY1) return;
+      const ix=Math.floor((x-FAR0)/cellW), iy=Math.floor((y-VY0)/cellH);
+      if(ix<0||ix>=GX||iy<0||iy>=GY) return;
+      const idx=ix*GY+iy;
+      if(oppOwnGrid[idx]<0 || t<oppOwnGrid[idx]){ oppOwnGrid[idx]=t; if(shot && !shotGrid[idx]) shotGrid[idx]=shot; }
     }
-
-    function simulatePoint() {
-      const player = playerNameInput.value || 'Player';
-      const opponent = opponentNameInput.value || 'Opponent';
-      const serveType = serveTypeSelect.value;
-      const returnType = returnTypeSelect.value;
-      const speed = Number(speedSlider.value);
-      const spin = Number(spinSlider.value) / 100;
-      const confidence = Number(confidenceSlider.value) / 100;
-
-      const serve = serveEffects[serveType];
-      const ret = returnEffects[returnType];
-
-      const servePower = clamp((speed / 130) * serve.power, 0, 1);
-      const serveAccuracy = clamp(serve.accuracy - (0.3 * spin) + randomBetween(-0.05, 0.05), 0, 1);
-      const returnChance = clamp(ret.consistency * (1 - servePower * 0.35) + randomBetween(-0.08, 0.08), 0.05, 0.98);
-      const servePressure = clamp(serve.spin * spin * 0.6 + confidence * 0.3, 0, 1);
-      const opponentPressure = clamp(ret.pressure + randomBetween(-0.05, 0.05), 0, 1);
-
-      const serveIn = Math.random() < serveAccuracy;
-      let text = `Serve: ${serveType} | Speed: ${speed} km/h | Spin: ${Math.round(spin * 100)}%\n`;
-
-      if (!serveIn) {
-        text += `Result: ${player} faults on serve. ${opponent} wins the point.`;
-        return { winner: opponent, text };
+    function bounceLegal(x,y){
+      if(y<-0.01||y>W+0.01) return false;
+      if(serveMode){ return x>=NET_X-0.01 && x<=NET_X+SERVICE+0.01; }
+      return x>=NET_X-0.01 && x<=L+0.01;
+    }
+    function traceShot(ux,uy,vh,vv){
+      const shot={ux,uy,vh,vv,h};   // enough to reconstruct the trajectory for hover
+      let px=yx,py=yy,z=h,vz=vv,t=0, ok=false, legal=true, clearedNet=false;
+      // samples: full path (air + all bounce arcs) as {x,y,z,t,air,bounce}
+      const samp=[];
+      // air phase to first bounce
+      for(let s=0;s<2400;s++){
+        const nx=px+ux*vh*dt, ny=py+uy*vh*dt, nz=z+vz*dt-0.5*g*dt*dt, nvz=vz-g*dt;
+        if(!clearedNet && (px-NET_X)*(nx-NET_X)<=0 && px!==nx){
+          const fr=(NET_X-px)/(nx-px), zc=z+(nz-z)*fr, yc=py+(ny-py)*fr;
+          if(zc<netHeightAt(yc)){ legal=false; break; }
+          clearedNet=true;
+        }
+        samp.push({x:px,y:py,z:z,t:t,air:true,bounce:false});
+        if(nz<=0 && vz<0){
+          if(!bounceLegal(nx,ny)){ legal=false; } else { ok=true; samp.push({x:nx,y:ny,z:0,t:t+dt,air:false,bounce:true,first:true}); }
+          break;
+        }
+        px=nx;py=ny;z=nz;vz=nvz;t+=dt;
+        if(px>FAR1+1||py<VY0-1||py>VY1+1||t>6){ legal=false; break; }
+      }
+      if(!ok||!legal) return;
+      // post-bounce arcs appended to the same sample list
+      let cx=samp[samp.length-1].x, cy=samp[samp.length-1].y, ct=samp[samp.length-1].t;
+      let vz2=Math.abs(vv-g*ct)*REST, bounces=0;
+      while(bounces<3){
+        let zz=0, vzz=vz2, stepped=false;
+        for(let s=0;s<1400;s++){
+          const nxx=cx+ux*vh*dt, nyy=cy+uy*vh*dt, nzz=zz+vzz*dt-0.5*g*dt*dt, nvzz=vzz-g*dt;
+          if(nzz<=0 && vzz<0){ cx=nxx;cy=nyy;ct+=dt; samp.push({x:cx,y:cy,z:0,t:ct,air:false,bounce:true}); vz2=Math.abs(vzz)*REST; stepped=true; break; }
+          cx=nxx;cy=nyy;zz=nzz;vzz=nvzz;ct+=dt;
+          samp.push({x:cx,y:cy,z:zz,t:ct,air:zz>0,bounce:false});
+          if(cx>FAR1+1||cy<VY0-1||cy>VY1+1||ct>7){stepped=false;break;}
+        }
+        if(!stepped||vz2<0.4||cx>FAR1+1) break;
+        bounces++;
       }
 
-      const returnSuccess = Math.random() < returnChance;
-      if (!returnSuccess) {
-        text += `Result: ${opponent} misses the return. ${player} wins the point.`;
-        return { winner: player, text };
+      // In 'bounce' mode only the FIRST bounce point colors a cell (later skid bounces are
+      // ignored); in 'pass' mode every reachable sample along the flight is eligible.
+      const eligible = (p)=> MODE==='bounce' ? (p.bounce && p.first) : (p.z<=reachH);
+
+      if(!HAS_OPP){
+        for(const p of samp){ if(eligible(p)) record(p.x,p.y,p.t,p.air,shot); }
+        return;
       }
 
-      const rallyStrength = servePower * servePressure + ret.consistency * opponentPressure + confidence * 0.2;
-      const rallyRandom = randomBetween(0, 1);
-      const rally = rallyStrength + (rallyRandom - 0.5) * 0.3;
+      // AUTHORITATIVE test: play the exchange. The opponent intercepts iff he can reach the ball
+      // (within reach height) BEFORE the ball's second bounce or it leaves the court. The shot is a
+      // WINNER only if he cannot — i.e. the ball becomes unreturnable untouched.
+      const ex=simulateExchange(samp, oppCtx);
+      const tHit = ex.hit ? ex.hit.t : Infinity;
+      const pointWon = ex.win;
 
-      if (rally > 0.52) {
-        text += `Result: ${player} constructs the rally and wins with a smart winner.`;
-        return { winner: player, text };
+      for(const p of samp){
+        if(!eligible(p)) continue;
+        // a first-bounce cell is a winner only if the whole point is won, and the bounce
+        // happened before any interception
+        if(pointWon && p.t < tHit - 1e-6) record(p.x,p.y,p.t,p.air,shot);
+        else recordOwn(p.x,p.y,p.t,shot);
       }
-
-      if (rally < 0.42) {
-        text += `Result: ${opponent} takes command and finishes the point.`;
-        return { winner: opponent, text };
-      }
-
-      text += `Result: Long rally, but ${player} keeps control and closes the point.`;
-      return { winner: player, text };
     }
-
-    function updateLabels() {
-      speedValue.textContent = `${speedSlider.value} km/h`;
-      spinValue.textContent = `${spinSlider.value}%`;
-      confidenceValue.textContent = `${confidenceSlider.value}%`;
-    }
-
-    function simulateMatch() {
-      const score = { player: 0, opponent: 0 };
-      const history = [];
-      while (score.player < 2 && score.opponent < 2) {
-        const result = simulatePoint();
-        history.push(result.text);
-        if (result.winner === 'Opponent') {
-          score.opponent += 1;
-        } else {
-          score.player += 1;
+    if(MODE==='bounce'){
+      // Target EVERY grid cell as a desired first-bounce location, so coverage is complete.
+      // For each cell centre, sweep speeds and solve the two launch angles that land the ball
+      // there. Because we target cells directly we can afford a denser speed sweep, which
+      // smooths the arrival-time field (especially the slow lob solutions near the net, where
+      // a coarse sweep makes the fastest-legal-lob time jump in visible steps).
+      const NSB = quality ? 40 : 18;   // bounce-mode speed samples
+      const tx0=NET_X, tx1=serveMode?(NET_X+SERVICE):L;
+      // speed list, ascending
+      const speeds=[]; for(let si=0; si<NSB; si++){ const frac=(si+0.5)/NSB; speeds.push(VMIN+(vmax-VMIN)*frac*frac); }
+      for(let ix=0; ix<GX; ix++){
+        const tx=FAR0+(ix+0.5)*cellW;
+        if(tx<tx0-0.2||tx>tx1+0.2) continue;
+        for(let iy=0; iy<GY; iy++){
+          const ty=VY0+(iy+0.5)*cellH;
+          if(ty<-0.2||ty>W+0.2) continue;           // first bounce must be within singles width
+          const dx=tx-yx, dy=ty-yy, d=Math.hypot(dx,dy);
+          if(d<0.2) continue;
+          const ux=dx/d, uy=dy/d;
+          // collect (v,th) shots whose first bounce actually lands in this cell
+          const cand=[];
+          for(const v of speeds){
+            for(const th of anglesFor(d,h,v)){
+              if(th>MAX_LAUNCH||th<-0.4) continue;
+              const vh=v*Math.cos(th), vv=v*Math.sin(th);
+              if(vh<=0.03) continue;
+              if(!clearsNet(yx,yy,h,ux,uy,vh,vv)) continue;   // must clear the net plane
+              cand.push({v,vh,vv});
+            }
+          }
+          if(!cand.length) continue;
+          if(PMODE==='exact'){
+            for(const c of cand) traceShot(ux,uy,c.vh,c.vv);          // every fitting shot
+          } else if(PMODE==='max'){
+            let mx=cand[0]; for(const c of cand) if(c.v>mx.v) mx=c;    // highest power
+            traceShot(ux,uy,mx.vh,mx.vv);
+          } else { // min: slowest that still clears net & reaches cell — traceShot enforces net
+            let mn=cand[0]; for(const c of cand) if(c.v<mn.v) mn=c;    // lowest power
+            traceShot(ux,uy,mn.vh,mn.vv);
+          }
         }
       }
-      const winner = score.player > score.opponent ? playerNameInput.value || 'Player' : opponentNameInput.value || 'Opponent';
-      return `Best-of-3 simulation:\n${history.join('\n\n')}\n\nMatch score: ${score.player} - ${score.opponent}\nWinner: ${winner}`;
+    } else {
+      for(let si=0; si<NS; si++){
+        const frac=(si+0.5)/NS; const v=VMIN+(vmax-VMIN)*frac*frac;
+        const tx0=NET_X+0.4, tx1=serveMode?(NET_X+SERVICE):L;
+        for(let ix=0; ix<TX; ix++){
+          const tx=tx0+(ix+0.5)/TX*(tx1-tx0);
+          for(let iy=0; iy<TY; iy++){
+            const ty=(iy+0.5)/TY*W;
+            const dx=tx-yx, dy=ty-yy, d=Math.hypot(dx,dy);
+            if(d<0.2) continue;
+            const ux=dx/d, uy=dy/d;
+            for(const th of anglesFor(d,h,v)){
+              if(th>MAX_LAUNCH||th<-0.4) continue;
+              const vh=v*Math.cos(th), vv=v*Math.sin(th);
+              if(vh<=0.03) continue;
+              traceShot(ux,uy,vh,vv);
+            }
+          }
+        }
+      }
+    }
+    let fastest=Infinity,slowest=-Infinity,count=0;
+    for(let i=0;i<timeGrid.length;i++){ if(timeGrid[i]>=0){count++;if(timeGrid[i]<fastest)fastest=timeGrid[i];if(timeGrid[i]>slowest)slowest=timeGrid[i];} }
+    return {fastest,slowest,count,cellArea:cellW*cellH};
+  }
+
+  // Rebuild a full 3D trajectory (air + bounce arcs) from stored shot params, with time.
+  function buildTrajectory(shot){
+    const {ux,uy,vh,vv,h}=shot; const dt=0.004, g=9.81, REST=0.73;
+    const pts=[]; let px=state.you.x,py=state.you.y,z=h,vz=vv,t=0;
+    for(let s=0;s<2400;s++){
+      pts.push({x:px,y:py,z:z,t:t,bounce:false});
+      const nz=z+vz*dt-0.5*g*dt*dt;
+      if(nz<=0 && vz<0){ px+=ux*vh*dt; py+=uy*vh*dt; t+=dt; pts.push({x:px,y:py,z:0,t:t,bounce:true}); z=0; vz=Math.abs(vz)*REST; break; }
+      px+=ux*vh*dt; py+=uy*vh*dt; z=nz; vz-=g*dt; t+=dt;
+      if(px>FAR1+1||py<VY0-1||py>VY1+1||t>6) break;
+    }
+    let bounces=0;
+    while(bounces<3 && z===0){
+      let zz=0, vzz=vz, stepped=false;
+      for(let s=0;s<1400;s++){
+        const nzz=zz+vzz*dt-0.5*g*dt*dt;
+        if(nzz<=0 && vzz<0){ px+=ux*vh*dt; py+=uy*vh*dt; t+=dt; pts.push({x:px,y:py,z:0,t:t,bounce:true}); vz=Math.abs(vzz)*REST; stepped=true; break; }
+        px+=ux*vh*dt; py+=uy*vh*dt; zz=nzz; vzz-=g*dt; t+=dt;
+        pts.push({x:px,y:py,z:zz,t:t,bounce:false});
+        if(px>FAR1+1||py<VY0-1||py>VY1+1||t>7){stepped=false;break;}
+      }
+      if(!stepped||vz<0.4||px>FAR1+1) break;
+      bounces++;
+    }
+    return pts;
+  }
+
+  // Time for the opponent to move a 1-D signed distance `dist` along an axis, given his
+  // initial speed component `v0` along that axis, acceleration and capped max speed.
+  function moveTime1D(dist, v0, accel, vmax){
+    const s=Math.sign(dist)||1; const d=Math.abs(dist); if(d<1e-6) return 0;
+    let u0=v0*s;                                 // initial speed in the move direction
+    u0=Math.max(-vmax,Math.min(vmax,u0));
+    const tToCap=Math.max(0,(vmax-u0)/accel);
+    const dAccel=u0*tToCap+0.5*accel*tToCap*tToCap;
+    if(dAccel>=d){ const disc=u0*u0+2*accel*d; return (-u0+Math.sqrt(Math.max(0,disc)))/accel; }
+    return tToCap+(d-dAccel)/vmax;
+  }
+
+  // Refined arrival time to a target, decomposed relative to the ball's local travel
+  // direction `bdir` (unit). The player covers the LATERAL axis (perpendicular to the ball
+  // line) first — that's the move that actually matters for width coverage — and the
+  // LONGITUDINAL axis (along the ball line, i.e. stepping forward/back) second. Movement on
+  // the two axes is simultaneous, so arrival is governed by the slower axis; reporting both
+  // lets the caller try lateral-only before committing to a forward/back adjustment.
+  function oppArrivalAxes(tx,ty,opp,bdir){
+    const rr=opp.reach||0;
+    const ox=state.opp.x+state.oppVel.x*opp.react, oy=state.opp.y+state.oppVel.y*opp.react;
+    let dx=tx-ox, dy=ty-oy;
+    // longitudinal (along ball dir) and lateral (perpendicular) components
+    const lx=bdir.x, ly=bdir.y;            // along-ball unit
+    const nx=-bdir.y, ny=bdir.x;           // perpendicular unit
+    let along = dx*lx+dy*ly;               // forward/back distance
+    let lat   = dx*nx+dy*ny;               // sideways distance
+    // shrink the total displacement by reach radius, applied to whichever axes remain
+    const total=Math.hypot(along,lat);
+    if(total>1e-6){ const f=Math.max(0,total-rr)/total; along*=f; lat*=f; }
+    // initial velocity components on each axis
+    const v0along=state.oppVel.x*lx+state.oppVel.y*ly;
+    const v0lat  =state.oppVel.x*nx+state.oppVel.y*ny;
+    const tLat   = moveTime1D(lat,   v0lat,   opp.accel, opp.vmax);
+    const tAlong = moveTime1D(along, v0along, opp.accel, opp.vmax);
+    return { tLat, tAlong, lat, along };
+  }
+
+  // True 2D arrival time: the opponent runs straight at the target with his initial velocity,
+  // acceleration, and speed cap, needing only to get within reach. This is the optimal pursuit
+  // to a fixed point (a straight sprint is time-optimal for point-to-point under these dynamics).
+  function oppArrive2D(tx,ty,opp){
+    const ox=state.opp.x+state.oppVel.x*opp.react, oy=state.opp.y+state.oppVel.y*opp.react;
+    let dx=tx-ox, dy=ty-oy, d=Math.hypot(dx,dy);
+    d=Math.max(0, d-(opp.reach||0));
+    if(d<1e-6) return opp.react;
+    const ux=dx/d, uy=dy/d;
+    let v0=state.oppVel.x*ux+state.oppVel.y*uy;        // initial speed toward target
+    v0=Math.max(-opp.vmax, Math.min(opp.vmax, v0));
+    return opp.react + moveTime1D(d, v0, opp.accel, opp.vmax);
+  }
+
+  // Interception scan over EVERY ball sample within reach height AND before the resolution time
+  // tLimit (the ball's 2nd bounce / court exit) — he must get the ball before the point is over.
+  // Among all such reachable samples we pick the one needing the LEAST MOVEMENT (he takes it where
+  // he barely has to move). If none is reachable in time, return the closest miss as his pursuit
+  // target so the animation still shows his best effort.
+  function solveIntercept(traj, opp, tLimit){
+    if(!traj.length) return null;
+    const lim = (tLimit==null) ? Infinity : tLimit;
+    const ox=state.opp.x, oy=state.opp.y;
+    let best=null, bestMove=Infinity, nearest=null;
+    for(let i=0;i<traj.length;i++){
+      const p=traj[i];
+      if(p.t > lim + 1e-6) break;            // past the point's resolution — too late to matter
+      if(p.z>opp.reachH) continue;
+      const arr=oppArrive2D(p.x,p.y,opp);
+      const delay=arr-p.t;                    // <=0 means he beats the ball there
+      if(delay<=1e-6){
+        const move=Math.max(0, Math.hypot(p.x-ox, p.y-oy) - (opp.reach||0));
+        if(move<bestMove){ bestMove=move; best={pt:p, idx:i, oppArr:arr, delay, reachable:true, move}; }
+      }
+      // closest miss = the point he arrives at with the SMALLEST time gap behind the ball; when
+      // he can't intercept, this is the route that misses by the least amount of time.
+      if(!nearest || delay<nearest.delay) nearest={pt:p, idx:i, oppArr:arr, delay, reachable:false};
+    }
+    return best || nearest;     // least-movement reachable in time, else least-time miss
+  }
+
+  // Sample the opponent's own position over time as he runs toward the intercept target. He
+  // accelerates while far, but BRAKES as he approaches so he settles on the target instead of
+  // overshooting and doubling back (stopping distance = v^2/2a). Honors reaction, momentum,
+  // acceleration and speed cap.
+  function oppPathTo(target, opp, tEnd){
+    const dt=0.02; const pts=[];
+    let x=state.opp.x, y=state.opp.y, vx=state.oppVel.x, vy=state.oppVel.y, t=0;
+    const reach=opp.reach||0;
+    while(t<=tEnd+1e-6){
+      pts.push({x,y,t});
+      if(t<opp.react){ x+=vx*dt; y+=vy*dt; t+=dt; continue; }   // reaction: coast on momentum
+      const dx=target.x-x, dy=target.y-y, d=Math.hypot(dx,dy);
+      const eff=Math.max(0, d-reach);                 // distance still to cover (within reach = done)
+      if(eff<1e-3){                                    // arrived: stop dead, no jitter
+        vx=0; vy=0; t+=dt; continue;
+      }
+      const ux=dx/d, uy=dy/d;
+      const sp=Math.hypot(vx,vy);
+      const stopDist=sp*sp/(2*opp.accel);              // distance needed to brake to rest
+      if(stopDist>=eff){
+        // braking zone: decelerate along current heading so we arrive at rest on target
+        const ns=Math.max(0, sp-opp.accel*dt);
+        if(sp>1e-6){ vx*=ns/sp; vy*=ns/sp; }
+      } else {
+        vx+=ux*opp.accel*dt; vy+=uy*opp.accel*dt;
+        const s2=Math.hypot(vx,vy); if(s2>opp.vmax){ vx*=opp.vmax/s2; vy*=opp.vmax/s2; }
+      }
+      // integrate, but never step past the target (clamp the final approach)
+      const stepd=Math.hypot(vx,vy)*dt;
+      if(stepd>=eff){ x=target.x-ux*reach; y=target.y-uy*reach; vx=0; vy=0; }
+      else { x+=vx*dt; y+=vy*dt; }
+      t+=dt;
+    }
+    return pts;
+  }
+
+  // AUTHORITATIVE winner test. The opponent intercepts the ball at the LEAST-MOVEMENT sample he
+  // can reach within his circle in time (he takes it where he barely has to move). The shot
+  // survives iff no reachable sample exists. We also produce his pursuit path (running straight at
+  // that intercept point, or his closest approach) for the animation/hover preview.
+  // Compute the ball's resolution time: 2nd bounce, or leaving the visualized area (any wall).
+  function resolveTime(traj){
+    let secondBounceT=Infinity, wallExitT=Infinity, bc=0;
+    for(const p of traj){
+      if(p.bounce){ bc++; if(bc===2){ secondBounceT=p.t; break; } }
+      if(wallExitT===Infinity && (p.x<VX0||p.x>VX1||p.y<VY0||p.y>VY1)) wallExitT=p.t;
+    }
+    return Math.min(secondBounceT, wallExitT);
+  }
+  function simulateExchange(traj, opp){
+    if(!traj.length) return {win:true, hit:null, defPath:[]};
+    const tRes=resolveTime(traj);
+    // he must intercept BEFORE the point resolves (2nd bounce / court exit)
+    const ic=solveIntercept(traj, opp, tRes);
+    let hit=null;
+    if(ic && ic.reachable){ hit={x:ic.pt.x, y:ic.pt.y, t:ic.pt.t}; }
+    const target = ic ? ic.pt : traj[traj.length-1];
+    const tEnd = hit ? hit.t : (isFinite(tRes)? tRes : traj[traj.length-1].t);
+    const defPath = oppPathTo(target, opp, tEnd);
+    return { win: !hit, hit, defPath };
+  }
+
+  let hoverShot=null;       // currently hovered trajectory (bounce or pass mode)
+  let hoverIntercept=null;  // {pt, oppPath} for opponent-mode hover preview
+  let anim=null;            // active animation state
+
+  function oppTime(tx,ty,vmax,react,accel,reach){
+    const rr=reach||0;
+    const ox=state.opp.x, oy=state.opp.y, vx=state.oppVel.x, vy=state.oppVel.y;
+    const px=ox+vx*react, py=oy+vy*react;
+    let dx=tx-px, dy=ty-py, d=Math.hypot(dx,dy);
+    d=Math.max(0, d-rr);                       // only need to get within reach radius
+    if(d<1e-3) return react;
+    const ux=dx/d, uy=dy/d;
+    let v0=vx*ux+vy*uy; v0=Math.max(-vmax,Math.min(vmax,v0));
+    const a=accel, tToCap=Math.max(0,(vmax-v0)/a), dAccel=v0*tToCap+0.5*a*tToCap*tToCap;
+    let tMove;
+    if(dAccel>=d){ const disc=v0*v0+2*a*d; tMove=(-v0+Math.sqrt(Math.max(0,disc)))/a; }
+    else { tMove=tToCap+(d-dAccel)/vmax; }
+    return react+tMove;
+  }
+  function computeOpp(vmax,react,accel,reach){
+    oppGrid=new Float32Array(GX*GY).fill(-1);
+    const cellW=(FAR1-FAR0)/GX, cellH=(VY1-VY0)/GY;
+    for(let ix=0;ix<GX;ix++)for(let iy=0;iy<GY;iy++){
+      const idx=ix*GY+iy; if(timeGrid[idx]<0) continue;
+      oppGrid[idx]=oppTime(FAR0+(ix+0.5)*cellW, VY0+(iy+0.5)*cellH, vmax,react,accel,reach);
+    }
+  }
+
+  function rampBall(t){
+    let f=(t-T_LO)/(T_HI-T_LO); f=Math.max(0,Math.min(1,f));
+    const s=[[0,29,158,117],[0.4,239,159,39],[0.7,216,90,48],[1,120,30,30]];
+    for(let i=0;i<s.length-1;i++){const a=s[i],b=s[i+1];if(f<=b[0]){const k=(f-a[0])/(b[0]-a[0]);return `rgb(${a[1]+(b[1]-a[1])*k|0},${a[2]+(b[2]-a[2])*k|0},${a[3]+(b[3]-a[3])*k|0})`;}}
+    return 'rgb(120,30,30)';
+  }
+  function rampDiff(d){
+    // winner margin: 0s (just barely beats him) -> +1s (comfortable). pale -> green.
+    let f=(d-0)/(1.0-0); f=Math.max(0,Math.min(1,f));
+    const s=[[0,235,235,235],[0.5,124,200,150],[1,29,158,117]];
+    for(let i=0;i<s.length-1;i++){const a=s[i],b=s[i+1];if(f<=b[0]){const k=(f-a[0])/(b[0]-a[0]);return `rgb(${a[1]+(b[1]-a[1])*k|0},${a[2]+(b[2]-a[2])*k|0},${a[3]+(b[3]-a[3])*k|0})`;}}
+    return 'rgb(29,158,117)';
+  }
+
+  function drawColorbar(mode){
+    const w=cbar.width/DPR, h=cbar.height/DPR; cbx.clearRect(0,0,w,h);
+    const barH=14, padX=4, top=4, barW=w-2*padX;
+    const lo=mode==='diff'?0:T_LO, hi=mode==='diff'?1.0:T_HI;
+    for(let i=0;i<barW;i++){ const t=lo+(i/barW)*(hi-lo); cbx.fillStyle=mode==='diff'?rampDiff(t):rampBall(t); cbx.fillRect(padX+i,top,1,barH); }
+    cbx.strokeStyle=cssv('--border')||'#ccc'; cbx.lineWidth=0.5; cbx.strokeRect(padX,top,barW,barH);
+    cbx.fillStyle=cssv('--muted')||'#666'; cbx.font='11px sans-serif'; cbx.textAlign='center';
+    if(mode==='diff'){
+      [0,0.25,0.5,0.75,1].forEach(sv=>{ const x=padX+(sv-lo)/(hi-lo)*barW; cbx.beginPath(); cbx.moveTo(x,top+barH); cbx.lineTo(x,top+barH+4); cbx.stroke(); cbx.fillText('+'+sv.toFixed(2)+'s',x,top+barH+18); });
+      cbx.textAlign='left'; cbx.fillStyle=cssv('--hint')||'#999'; cbx.fillText('barely wins',padX,top+barH+18);
+      cbx.textAlign='right'; cbx.fillText('clean winner',padX+barW,top+barH+18);
+    } else {
+      for(let sv=0; sv<=hi+0.001; sv+=0.5){ const x=padX+(sv-lo)/(hi-lo)*barW; cbx.beginPath(); cbx.moveTo(x,top+barH); cbx.lineTo(x,top+barH+4); cbx.stroke(); cbx.fillText(sv.toFixed(1)+'s',x,top+barH+18); }
+    }
+  }
+
+  function drawContours(levels,getVal,color,lw){
+    const cellW=(FAR1-FAR0)/GX, cellH=(VY1-VY0)/GY;
+    function ptPx(ax,ay,bx,by,va,vb,lv){const k=(lv-va)/(vb-va);return toPx(ax+(bx-ax)*k,ay+(by-ay)*k);}
+    levels.forEach(lv=>{
+      ctx.beginPath();
+      for(let ix=0;ix<GX-1;ix++)for(let iy=0;iy<GY-1;iy++){
+        const x0=FAR0+(ix+0.5)*cellW,x1=FAR0+(ix+1.5)*cellW,y0=VY0+(iy+0.5)*cellH,y1=VY0+(iy+1.5)*cellH;
+        const v00=getVal(ix,iy),v10=getVal(ix+1,iy),v11=getVal(ix+1,iy+1),v01=getVal(ix,iy+1);
+        if(isNaN(v00)||isNaN(v10)||isNaN(v11)||isNaN(v01)) continue;
+        let id=0; if(v00>lv)id|=1; if(v10>lv)id|=2; if(v11>lv)id|=4; if(v01>lv)id|=8;
+        if(id===0||id===15) continue;
+        const eb=()=>ptPx(x0,y0,x1,y0,v00,v10,lv), er=()=>ptPx(x1,y0,x1,y1,v10,v11,lv), et=()=>ptPx(x1,y1,x0,y1,v11,v01,lv), el=()=>ptPx(x0,y1,x0,y0,v01,v00,lv);
+        let seg=[];
+        switch(id){case 1:case 14:seg=[el(),eb()];break;case 2:case 13:seg=[eb(),er()];break;case 3:case 12:seg=[el(),er()];break;case 4:case 11:seg=[er(),et()];break;case 6:case 9:seg=[eb(),et()];break;case 7:case 8:seg=[el(),et()];break;case 5:seg=[el(),eb(),er(),et()];break;case 10:seg=[eb(),er(),el(),et()];break;}
+        for(let i=0;i<seg.length;i+=2){ if(seg[i+1]){ctx.moveTo(seg[i].px,seg[i].py);ctx.lineTo(seg[i+1].px,seg[i+1].py);} }
+      }
+      ctx.strokeStyle=color; ctx.lineWidth=(lw!=null?lw:(lv===0?2.0:1.1)); ctx.stroke();
+    });
+  }
+
+  function render(stats,serveMode,showIso,showOpp){
+    ctx.clearRect(0,0,geom.pw,geom.ph);
+    const ofTL=toPx(VX0,VY0), ofBR=toPx(VX1,VY1);
+    ctx.fillStyle='#888780'; ctx.globalAlpha=0.07; ctx.fillRect(ofTL.px,ofTL.py,ofBR.px-ofTL.px,ofBR.py-ofTL.py); ctx.globalAlpha=1;
+    const dTL=toPx(0,-ALLEY), dBR=toPx(L,W+ALLEY);
+    ctx.fillStyle='#5dcaa5'; ctx.globalAlpha=0.10; ctx.fillRect(dTL.px,dTL.py,dBR.px-dTL.px,dBR.py-dTL.py); ctx.globalAlpha=1;
+    const cTL=toPx(0,0), cBR=toPx(L,W);
+    ctx.fillStyle='#5dcaa5'; ctx.globalAlpha=0.12; ctx.fillRect(cTL.px,cTL.py,cBR.px-cTL.px,cBR.py-cTL.py); ctx.globalAlpha=1;
+
+    const cellW=(FAR1-FAR0)/GX, cellH=(VY1-VY0)/GY;
+    const ringEvery=(Math.min(cellW*geom.sx,cellH*geom.sy)<6)?2:1;
+    for(let ix=0;ix<GX;ix++)for(let iy=0;iy<GY;iy++){
+      const idx=ix*GY+iy, tb=timeGrid[idx];
+      const p=toPx(FAR0+ix*cellW, VY0+iy*cellH);
+      const wpx=cellW*geom.sx+0.6, hpx=cellH*geom.sy+0.6;
+      if(showOpp){
+        if(tb>=0){
+          // winner: at least one trajectory reaches here before the opponent can take that
+          // ball anywhere on its path. Color by margin vs his direct reach to this point.
+          const to=oppGrid[idx];
+          const margin=(to>=0? to-tb : 2.0);
+          ctx.fillStyle=rampDiff(margin);
+          ctx.globalAlpha=0.85; ctx.fillRect(p.px,p.py,wpx,hpx); ctx.globalAlpha=1;
+        } else if(oppOwnGrid[idx]>=0){
+          // opponent-owned: every ball that reaches here was interceptable by him earlier.
+          ctx.fillStyle='#d24a45';
+          ctx.globalAlpha=0.78; ctx.fillRect(p.px,p.py,wpx,hpx); ctx.globalAlpha=1;
+        }
+      } else {
+        if(tb<0) continue;
+        ctx.fillStyle=rampBall(tb);
+        ctx.globalAlpha=0.85; ctx.fillRect(p.px,p.py,wpx,hpx); ctx.globalAlpha=1;
+        if(airGrid[idx] && ix%ringEvery===0 && iy%ringEvery===0){
+          ctx.beginPath(); ctx.arc(p.px+wpx/2,p.py+hpx/2,Math.min(wpx,hpx)*0.26,0,Math.PI*2);
+          ctx.strokeStyle='#0c447c'; ctx.lineWidth=0.8; ctx.globalAlpha=0.55; ctx.stroke(); ctx.globalAlpha=1;
+        }
+      }
     }
 
-    speedSlider.addEventListener('input', updateLabels);
-    spinSlider.addEventListener('input', updateLabels);
-    confidenceSlider.addEventListener('input', updateLabels);
+    if(showOpp){
+      // faint interior margin contours within the winner region
+      const marginAt=(ix,iy)=>{const idx=ix*GY+iy;const tb=timeGrid[idx];if(tb<0)return NaN;const to=oppGrid[idx];return to<0?NaN:to-tb;};
+      drawContours([0.3,0.6,1.0],marginAt,'rgba(10,10,10,0.35)',1.0);
+      // break-even frontier (red): boundary between winner cells and opponent-owned cells.
+      // indicator = 1 inside winner region, 0 where opponent owns (or out of reach).
+      const winInd=(ix,iy)=>{const idx=ix*GY+iy; if(timeGrid[idx]>=0) return 1; if(oppOwnGrid[idx]>=0) return 0; return NaN;};
+      drawContours([0.5],winInd,'#d8342f',2.6);
+    }
+    else if(showIso){ drawContours([0.5,1.0,1.5,2.0,2.5],(ix,iy)=>{const t=timeGrid[ix*GY+iy];return t<0?NaN:t;},'rgba(20,20,20,0.5)'); }
 
-    simulatePointBtn.addEventListener('click', () => {
-      const result = simulatePoint();
-      results.textContent = result.text;
-    });
+    ctx.strokeStyle=cssv('--muted')||'#888'; ctx.lineWidth=1.2;
+    function line(ax,ay,bx,by){const a=toPx(ax,ay),b=toPx(bx,by);ctx.beginPath();ctx.moveTo(a.px,a.py);ctx.lineTo(b.px,b.py);ctx.stroke();}
+    line(0,-ALLEY,L,-ALLEY); line(0,W+ALLEY,L,W+ALLEY); line(0,-ALLEY,0,W+ALLEY); line(L,-ALLEY,L,W+ALLEY);
+    ctx.strokeRect(cTL.px,cTL.py,cBR.px-cTL.px,cBR.py-cTL.py);
+    line(NET_X-SERVICE,0,NET_X-SERVICE,W); line(NET_X+SERVICE,0,NET_X+SERVICE,W);
+    line(NET_X+SERVICE,W/2,L,W/2); line(NET_X-SERVICE,W/2,NET_X,W/2);
+    if(serveMode){ const sTL=toPx(NET_X,0), sBR=toPx(NET_X+SERVICE,W); ctx.save(); ctx.strokeStyle='#185fa5'; ctx.lineWidth=2; ctx.strokeRect(sTL.px,sTL.py,sBR.px-sTL.px,sBR.py-sTL.py); ctx.restore(); }
+    ctx.save(); ctx.setLineDash([4,4]); ctx.strokeStyle='#444441'; ctx.lineWidth=2.5; line(NET_X,-ALLEY,NET_X,W+ALLEY); ctx.restore();
 
-    simulateMatchBtn.addEventListener('click', () => {
-      results.textContent = simulateMatch();
-    });
+    // hovered trajectory (bounce mode): draw its ground shadow (sun due north at 45°, so a
+    // point at height z is shadowed northward by z metres, -y in court coords) then the arc.
+    if(hoverShot){
+      const pts=buildTrajectory(hoverShot);
+      // shadow first (under everything else here)
+      ctx.beginPath();
+      for(let i=0;i<pts.length;i++){ const q=toPx(pts[i].x, pts[i].y - pts[i].z); if(i===0)ctx.moveTo(q.px,q.py); else ctx.lineTo(q.px,q.py); }
+      ctx.strokeStyle='rgba(20,20,20,0.28)'; ctx.lineWidth=2.2; ctx.stroke();
+      // faint vertical droplines connecting ball to its shadow, sampled sparsely
+      ctx.strokeStyle='rgba(20,20,20,0.12)'; ctx.lineWidth=0.8;
+      for(let i=0;i<pts.length;i+=8){ const a=toPx(pts[i].x,pts[i].y), b=toPx(pts[i].x,pts[i].y-pts[i].z); ctx.beginPath(); ctx.moveTo(a.px,a.py); ctx.lineTo(b.px,b.py); ctx.stroke(); }
+      // the trajectory itself (ball path, ignoring height in plan view)
+      ctx.beginPath();
+      for(let i=0;i<pts.length;i++){ const q=toPx(pts[i].x,pts[i].y); if(i===0)ctx.moveTo(q.px,q.py); else ctx.lineTo(q.px,q.py); }
+      ctx.strokeStyle='#0c447c'; ctx.lineWidth=2.2; ctx.stroke();
+      // mark the first bounce point only (the one the colored field represents)
+      ctx.fillStyle='#0c447c';
+      for(let i=1;i<pts.length-1;i++){ if(pts[i].z===0 && pts[i-1].z>0){ const q=toPx(pts[i].x,pts[i].y); ctx.beginPath(); ctx.arc(q.px,q.py,3.5,0,Math.PI*2); ctx.fill(); break; } }
+      // start marker at racket
+      const st=toPx(state.you.x,state.you.y); ctx.beginPath(); ctx.arc(st.px,st.py,3,0,Math.PI*2); ctx.fillStyle='#185fa5'; ctx.fill();
+    }
 
-    updateLabels();
-  </script>
+    // opponent best-intercept preview (hover, opponent mode)
+    if(hoverIntercept){
+      const path=hoverIntercept.path;
+      ctx.beginPath();
+      for(let i=0;i<path.length;i++){ const q=toPx(path[i].x,path[i].y); if(i===0)ctx.moveTo(q.px,q.py); else ctx.lineTo(q.px,q.py); }
+      ctx.strokeStyle='#993c1d'; ctx.setLineDash([5,4]); ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
+      // intercept point + his reach circle there
+      const ipt=toPx(hoverIntercept.pt.x,hoverIntercept.pt.y);
+      ctx.beginPath(); ctx.arc(ipt.px,ipt.py, (+ORR.value)*geom.sx, 0, Math.PI*2);
+      ctx.strokeStyle='rgba(153,60,29,0.5)'; ctx.lineWidth=1.2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(ipt.px,ipt.py,4,0,Math.PI*2); ctx.fillStyle='#993c1d'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.2; ctx.stroke();
+    }
+
+    const pe=toPx(state.you.x,state.you.y);
+    ctx.beginPath(); ctx.arc(pe.px,pe.py,9,0,Math.PI*2); ctx.fillStyle='#185fa5'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('Y',pe.px,pe.py);
+
+    if(showOpp){
+      const po=toPx(state.opp.x,state.opp.y);
+      // reach circle
+      ctx.beginPath(); ctx.arc(po.px,po.py,(+ORR.value)*geom.sx,0,Math.PI*2); ctx.strokeStyle='rgba(153,60,29,0.35)'; ctx.lineWidth=1; ctx.stroke();
+      const tip=toPx(state.opp.x+state.oppVel.x*0.35, state.opp.y+state.oppVel.y*0.35);
+      ctx.strokeStyle='#993c1d'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.moveTo(po.px,po.py); ctx.lineTo(tip.px,tip.py); ctx.stroke();
+      const ang=Math.atan2(tip.py-po.py,tip.px-po.px), ah=7;
+      ctx.beginPath(); ctx.moveTo(tip.px,tip.py); ctx.lineTo(tip.px-ah*Math.cos(ang-0.4),tip.py-ah*Math.sin(ang-0.4)); ctx.lineTo(tip.px-ah*Math.cos(ang+0.4),tip.py-ah*Math.sin(ang+0.4)); ctx.closePath(); ctx.fillStyle='#993c1d'; ctx.fill();
+      ctx.beginPath(); ctx.arc(tip.px,tip.py,5,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle='#993c1d'; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.beginPath(); ctx.arc(po.px,po.py,9,0,Math.PI*2); ctx.fillStyle='#993c1d'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('O',po.px,po.py);
+    }
+    ctx.textAlign='start'; ctx.textBaseline='alphabetic';
+
+    if(showOpp){
+      let win=0, own=0, best=-Infinity;
+      for(let i=0;i<timeGrid.length;i++){
+        if(timeGrid[i]>=0){ win++; const to=oppGrid[i]; if(to>=0){const d=to-timeGrid[i]; if(d>best)best=d;} }
+        else if(oppOwnGrid[i]>=0){ own++; }
+      }
+      setCard('lab1','Winner area','m1', (win*stats.cellArea).toFixed(1)+' m²');
+      setCard('lab2','Best margin','m2', isFinite(best)?'+'+best.toFixed(2)+' s':'—');
+      setCard('lab3','Opp. covers','m3', (own*stats.cellArea).toFixed(1)+' m²');
+    } else {
+      setCard('lab1','Reachable area','m1',(stats.count*stats.cellArea).toFixed(1)+' m²');
+      setCard('lab2','Fastest arrival','m2', isFinite(stats.fastest)?stats.fastest.toFixed(2)+' s':'—');
+      setCard('lab3','Slowest reachable','m3', isFinite(stats.slowest)?stats.slowest.toFixed(2)+' s':'—');
+    }
+    drawColorbar(showOpp?'diff':'ball');
+  }
+  function setCard(lab,labTxt,num,numTxt){ document.getElementById(lab).textContent=labTxt; document.getElementById(num).textContent=numTxt; }
+
+  const busy=document.getElementById('busy');
+  let lastStats={count:0,cellArea:0,fastest:0,slowest:0};
+  let lastRenderArgs=null;
+  function draw(quality){
+    const v=+V.value, h=+H.value, rh=+RH.value, sm=SERVE.checked, iso=ISO.checked, op=OPP.checked;
+    const mode=document.getElementById('modeBounce').checked?'bounce':'pass';
+    const pmode=document.getElementById('pmodeMax').checked?'max':(document.getElementById('pmodeMin').checked?'min':'exact');
+    document.getElementById('powerModes').style.display = (mode==='bounce') ? 'flex' : 'none';
+    const run=()=>{
+      let oppCtx=null;
+      if(op){
+        oppCtx={ vmax:+OS.value, react:+ORX.value, accel:+OA.value, reachH:+RH.value, reach:+ORR.value };
+      }
+      lastStats=computeBall(v,h,rh,sm,quality,oppCtx,mode,pmode);
+      if(op) computeOpp(+OS.value,+ORX.value,+OA.value,+ORR.value); // for the 0-line contour + cards
+      lastRenderArgs=[lastStats,sm,iso,op];
+      render(lastStats,sm,iso,op);
+      busy.textContent='';
+    };
+    if(quality){ busy.textContent='computing…'; setTimeout(run,20); } else run();
+  }
+  function rerender(){ if(lastRenderArgs) render(...lastRenderArgs); }
+  // opponent now changes the WINNER SET (via clean-path gating), so it needs a full
+  // ball recompute — but we keep it light (coarse) during drag, full on release.
+  function redrawOppOnly(){ draw(false); }
+
+  const H=document.getElementById('h'),V=document.getElementById('v'),RH=document.getElementById('rh');
+  const SERVE=document.getElementById('serve'),ISO=document.getElementById('iso'),OPP=document.getElementById('opp');
+  const OS=document.getElementById('os'),ORX=document.getElementById('orx'),OA=document.getElementById('oa'),ORR=document.getElementById('orr');
+  let hiTimer=null;
+  function onSlider(out,fmt,el){ document.getElementById(out).textContent=fmt(el.value); draw(false); clearTimeout(hiTimer); hiTimer=setTimeout(()=>draw(true),250); }
+  H.addEventListener('input',()=>onSlider('hOut',x=>(+x).toFixed(1),H));
+  V.addEventListener('input',()=>onSlider('vOut',x=>x,V));
+  RH.addEventListener('input',()=>onSlider('rhOut',x=>(+x).toFixed(1),RH));
+  function onOpp(out,fmt,el){ document.getElementById(out).textContent=fmt(el.value); draw(false); clearTimeout(hiTimer); hiTimer=setTimeout(()=>draw(true),250); }
+  OS.addEventListener('input',()=>onOpp('osOut',x=>(+x).toFixed(1),OS));
+  ORX.addEventListener('input',()=>onOpp('orxOut',x=>(+x).toFixed(2),ORX));
+  OA.addEventListener('input',()=>onOpp('oaOut',x=>(+x).toFixed(1),OA));
+  ORR.addEventListener('input',()=>onOpp('orrOut',x=>(+x).toFixed(1),ORR));
+  SERVE.addEventListener('change',()=>draw(true));
+  ISO.addEventListener('change',()=>draw(true));
+  document.getElementById('modePass').addEventListener('change',()=>{hoverShot=null;hoverIntercept=null;anim=null;draw(true);});
+  document.getElementById('modeBounce').addEventListener('change',()=>{hoverShot=null;hoverIntercept=null;anim=null;draw(true);});
+  ['pmodeExact','pmodeMax','pmodeMin'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{hoverShot=null;hoverIntercept=null;anim=null;draw(true);}));
+  OPP.addEventListener('change',()=>{
+    const on=OPP.checked;
+    hoverShot=null; hoverIntercept=null; anim=null;
+    document.getElementById('oppControls').style.display=on?'grid':'none';
+    document.getElementById('hintBall').style.display=on?'none':'block';
+    document.getElementById('hintOpp').style.display=on?'block':'none';
+    draw(true);
+  });
+
+  let drag=null;
+  function evtPos(e){const r=cv.getBoundingClientRect();return{cx:(e.touches?e.touches[0].clientX:e.clientX)-r.left,cy:(e.touches?e.touches[0].clientY:e.clientY)-r.top};}
+  function hit(cx,cy){
+    const py=toPx(state.you.x,state.you.y); if(Math.hypot(cx-py.px,cy-py.py)<18) return 'you';
+    if(OPP.checked){
+      const po=toPx(state.opp.x,state.opp.y);
+      const tip=toPx(state.opp.x+state.oppVel.x*0.35,state.opp.y+state.oppVel.y*0.35);
+      if(Math.hypot(cx-tip.px,cy-tip.py)<16) return 'vel';
+      if(Math.hypot(cx-po.px,cy-po.py)<18) return 'opp';
+    }
+    return null;
+  }
+  function start(e){
+    const{cx,cy}=evtPos(e);
+    const right = (e.button===2);
+    if(right){
+      // right-click: set opponent's velocity direction (from him toward the cursor)
+      if(OPP.checked){ drag='vel'; setOppVelFromCursor(cx,cy); e.preventDefault(); }
+      return;
+    }
+    // left-click: grab a position handle (you / opponent)
+    const h=hit(cx,cy);
+    drag = (h==='vel') ? 'opp' : h;   // left-click near the arrow still moves the opponent
+    if(drag) e.preventDefault();
+  }
+  function setOppVelFromCursor(cx,cy){
+    const c=toCourt(cx,cy);
+    state.oppVel.x=c.x-state.opp.x; state.oppVel.y=c.y-state.opp.y;
+    const sp=Math.hypot(state.oppVel.x,state.oppVel.y), cap=+OS.value;
+    if(sp>cap && sp>1e-6){ state.oppVel.x*=cap/sp; state.oppVel.y*=cap/sp; }
+    redrawOppOnly();
+  }
+  function move(e){
+    if(!drag)return; e.preventDefault();
+    const{cx,cy}=evtPos(e); const c=toCourt(cx,cy);
+    if(drag==='you'){ state.you.x=Math.max(VX0,Math.min(NET_X-0.3,c.x)); state.you.y=Math.max(VY0,Math.min(VY1,c.y)); draw(false); }
+    else if(drag==='opp'){ state.opp.x=Math.max(NET_X+0.3,Math.min(VX1,c.x)); state.opp.y=Math.max(VY0,Math.min(VY1,c.y)); redrawOppOnly(); }
+    else if(drag==='vel'){ setOppVelFromCursor(cx,cy); }
+  }
+  function end(){ if(drag){const wasDrag=drag; drag=null; draw(true);} }
+  cv.addEventListener('mousedown',start); window.addEventListener('mousemove',move); window.addEventListener('mouseup',end);
+  cv.addEventListener('contextmenu',e=>{ if(OPP.checked){ e.preventDefault(); } });  // allow right-drag
+  cv.addEventListener('touchstart',start,{passive:false}); cv.addEventListener('touchmove',move,{passive:false}); cv.addEventListener('touchend',end);
+
+  // Hover: show the trajectory stored for the cell under the cursor. In opponent mode also
+  // preview the opponent's best intercept path. Available in bounce mode, or whenever the
+  // opponent is on (winner cells store their winning shot).
+  function hover(e){
+    if(drag || anim) return;
+    const inBounce=document.getElementById('modeBounce').checked;
+    const inOpp=OPP.checked;
+    if(!inBounce && !inOpp){ if(hoverShot){hoverShot=null;hoverIntercept=null;rerender();} return; }
+    const {cx,cy}=evtPos(e); const c=toCourt(cx,cy);
+    const cellW=(FAR1-FAR0)/GX, cellH=(VY1-VY0)/GY;
+    const ix=Math.floor((c.x-FAR0)/cellW), iy=Math.floor((c.y-VY0)/cellH);
+    let shot=null;
+    if(ix>=0&&ix<GX&&iy>=0&&iy<GY && shotGrid){ shot=shotGrid[ix*GY+iy]||null; }
+    if(shot!==hoverShot){
+      hoverShot=shot; hoverIntercept=null;
+      if(shot && inOpp){
+        const opp=oppParams();
+        const traj=buildTrajectory(shot);
+        const ic=solveIntercept(traj, opp, resolveTime(traj));
+        if(ic){ hoverIntercept={ pt:ic.pt, path:oppPathTo(ic.pt, opp, ic.oppArr) }; }
+      }
+      rerender(); cv.style.cursor=shot?'pointer':'default';
+    }
+  }
+  function hoverLeave(){ if(!anim && hoverShot){hoverShot=null;hoverIntercept=null;rerender();} }
+  function oppParams(){ return { vmax:+OS.value, react:+ORX.value, accel:+OA.value, reach:+ORR.value, reachH:+RH.value }; }
+  cv.addEventListener('mousemove',hover);
+  cv.addEventListener('mouseleave',hoverLeave);
+
+  // Click in opponent mode over a shot cell: play the exchange in real time.
+  function startAnim(shot){
+    const opp=oppParams();
+    const traj=buildTrajectory(shot);
+    const ex=simulateExchange(traj, opp);
+    const tResolve=Math.min(resolveTime(traj), traj[traj.length-1].t);
+    const tHit = ex.hit ? ex.hit.t : Infinity;
+    const intercepted = !!ex.hit;                     // he got it before the point resolved
+    const tEnd = intercepted ? tHit : tResolve;
+    const target = ex && ex.hit ? {x:ex.hit.x,y:ex.hit.y} : (traj[traj.length-1]);
+    const oppPath = oppPathTo(target, opp, tEnd);
+    anim={ traj, oppPath, tEnd, intercepted, hit:ex.hit, t0:performance.now(), reach:+ORR.value, reachH:+RH.value };
+    requestAnimationFrame(stepAnim);
+  }
+  function sampleAt(arr, t){
+    // linear search (arrays are short); return interpolated {x,y,(z)}
+    if(t<=arr[0].t) return arr[0];
+    for(let i=1;i<arr.length;i++){ if(arr[i].t>=t){ const a=arr[i-1],b=arr[i],k=(t-a.t)/((b.t-a.t)||1);
+      return {x:a.x+(b.x-a.x)*k, y:a.y+(b.y-a.y)*k, z:(a.z!=null?a.z+(b.z-a.z)*k:0)}; } }
+    return arr[arr.length-1];
+  }
+  function stepAnim(now){
+    if(!anim) return;
+    const t=(now-anim.t0)/1000;
+    rerender();
+    // draw ball trajectory faintly
+    const traj=anim.traj;
+    ctx.beginPath();
+    for(let i=0;i<traj.length;i++){ const q=toPx(traj[i].x,traj[i].y); if(i===0)ctx.moveTo(q.px,q.py); else ctx.lineTo(q.px,q.py); }
+    ctx.strokeStyle='rgba(12,68,124,0.25)'; ctx.lineWidth=1.5; ctx.stroke();
+    const tc=Math.min(t, anim.tEnd);
+    const bp=sampleAt(traj, tc), op=sampleAt(anim.oppPath, tc);
+    // ball shadow + ball
+    const bsh=toPx(bp.x, bp.y-(bp.z||0)); const bb=toPx(bp.x,bp.y);
+    ctx.beginPath(); ctx.arc(bsh.px,bsh.py,3,0,Math.PI*2); ctx.fillStyle='rgba(20,20,20,0.25)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(bb.px,bb.py, 4+ (bp.z||0)*1.2,0,Math.PI*2); ctx.fillStyle='#0c447c'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.stroke();
+    // opponent + reach
+    const oo=toPx(op.x,op.y);
+    ctx.beginPath(); ctx.arc(oo.px,oo.py, anim.reach*geom.sx,0,Math.PI*2); ctx.strokeStyle='rgba(153,60,29,0.4)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(oo.px,oo.py,9,0,Math.PI*2); ctx.fillStyle='#993c1d'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('O',oo.px,oo.py); ctx.textAlign='start'; ctx.textBaseline='alphabetic';
+
+    if(t>=anim.tEnd){
+      const label = anim.intercepted ? 'intercepted' : 'winner';
+      const col = anim.intercepted ? '#993c1d' : '#1d9e75';
+      const lp=toPx(bp.x,bp.y);
+      ctx.fillStyle=col; ctx.font='600 13px sans-serif'; ctx.textAlign='center';
+      ctx.fillText(label, lp.px, lp.py-14); ctx.textAlign='start';
+      // hold the final frame briefly, then clear
+      setTimeout(()=>{ anim=null; rerender(); }, 1100);
+      return;
+    }
+    requestAnimationFrame(stepAnim);
+  }
+  function clickPlay(e){
+    if(!OPP.checked || drag) return;
+    const {cx,cy}=evtPos(e);
+    // ignore clicks on the draggable handles (opponent dot / velocity arrowhead / you)
+    if(hit(cx,cy)) return;
+    const c=toCourt(cx,cy);
+    const cellW=(FAR1-FAR0)/GX, cellH=(VY1-VY0)/GY;
+    const ix=Math.floor((c.x-FAR0)/cellW), iy=Math.floor((c.y-VY0)/cellH);
+    if(ix>=0&&ix<GX&&iy>=0&&iy<GY && shotGrid){ const shot=shotGrid[ix*GY+iy]; if(shot){ startAnim(shot); } }
+  }
+  cv.addEventListener('click', clickPlay);
+
+  window.addEventListener('resize',resize); resize();
+})();
+</script>
 </body>
 </html>
