@@ -50,35 +50,43 @@
     <div class="ctl"><label>Hit height (m)</label><div class="row"><input type="range" id="h" min="0.3" max="3.5" step="0.1" value="0.9"><span class="val" id="hOut">0.9</span></div></div>
     <div class="ctl"><label>Max power (m/s)</label><div class="row"><input type="range" id="v" min="6" max="65" step="1" value="38"><span class="val" id="vOut">38</span></div></div>
     <div class="ctl"><label>Max reach height (m)</label><div class="row"><input type="range" id="rh" min="1.0" max="3.5" step="0.1" value="2.6"><span class="val" id="rhOut">2.6</span></div></div>
+    <div class="ctl"><label>Target height over net (m)</label><div class="row"><input type="range" id="noh" min="0.0" max="3.0" step="0.05" value="0.30"><span class="val" id="nohOut">0.30</span></div></div>
   </div>
 
-  <div class="controls" id="oppControls" style="display:none;">
+  <div class="controls" id="scatterControls">
+    <div class="ctl"><label>Scatter: power (±%)</label><div class="row"><input type="range" id="scv" min="0" max="25" step="1" value="8"><span class="val" id="scvOut">8</span></div></div>
+    <div class="ctl"><label>Scatter: launch angle (±°)</label><div class="row"><input type="range" id="sca" min="0" max="10" step="0.5" value="2.5"><span class="val" id="scaOut">2.5</span></div></div>
+    <div class="ctl"><label>Scatter: aim direction (±°)</label><div class="row"><input type="range" id="scd" min="0" max="10" step="0.5" value="2.5"><span class="val" id="scdOut">2.5</span></div></div>
+  </div>
+
+  <div class="controls" id="oppControls" style="display:grid;">
     <div class="ctl"><label>Opp. run speed (m/s)</label><div class="row"><input type="range" id="os" min="3" max="9" step="0.1" value="6"><span class="val" id="osOut">6.0</span></div></div>
     <div class="ctl"><label>Opp. reaction (s)</label><div class="row"><input type="range" id="orx" min="0" max="0.6" step="0.05" value="0.2"><span class="val" id="orxOut">0.20</span></div></div>
     <div class="ctl"><label>Opp. accel (m/s²)</label><div class="row"><input type="range" id="oa" min="3" max="20" step="0.5" value="8"><span class="val" id="oaOut">8.0</span></div></div>
     <div class="ctl"><label>Opp. reach (m)</label><div class="row"><input type="range" id="orr" min="0.3" max="2.0" step="0.1" value="1.0"><span class="val" id="orrOut">1.0</span></div></div>
   </div>
 
-<div class="toggles">
-  <label><input type="checkbox" id="serve"> Serve mode</label>
-  <label><input type="checkbox" id="iso"> Ball isochrones</label>
-  <label><input type="checkbox" id="opp" checked> Add opponent (difference map)</label>
-</div>
+  <div class="toggles">
+    <label><input type="checkbox" id="serve"> Serve mode</label>
+    <label><input type="checkbox" id="iso"> Ball isochrones</label>
+    <label><input type="checkbox" id="opp" checked> Add opponent (difference map)</label>
+  </div>
 
-<div class="toggles" style="margin-top:-2px;">
-  <span style="color:var(--muted);">Color points where the ball:</span>
-  <label><input type="radio" name="mode" id="modePass" value="pass"> passes (air or roll)</label>
-  <label><input type="radio" name="mode" id="modeBounce" value="bounce" checked> bounces</label>
-</div>
+  <div class="toggles" style="margin-top:-2px;">
+    <span style="color:var(--muted);">Color points where the ball:</span>
+    <label><input type="radio" name="mode" id="modePass" value="pass"> passes (air or roll)</label>
+    <label><input type="radio" name="mode" id="modeBounce" value="bounce" checked> bounces</label>
+  </div>
 
-<div class="toggles" id="powerModes" style="margin-top:-2px; display:none;">
-  <span style="color:var(--muted);">Shot power to each spot:</span>
-  <label><input type="radio" name="pmode" id="pmodeExact" value="exact"> exact-fit</label>
-  <label><input type="radio" name="pmode" id="pmodeMax" value="max" checked> max power</label>
-  <label><input type="radio" name="pmode" id="pmodeMin" value="min"> min to clear net</label>
-</div>
-  <div class="hint" id="hintBall">Drag the <b style="color:var(--accent)">blue dot</b> (you). Color = <b>fastest ball arrival in seconds</b>. The visible area includes the <b>doubles court, side tramlines, and back/side outfields</b>. In <b>bounces</b> mode, hover any cell to see that shot's trajectory and its 45° shadow. Enable the opponent to switch to a difference map.</div>
-  <div class="hint" id="hintOpp" style="display:none;"><b>Left-drag</b> the <b style="color:var(--opp)">coral dot</b> to move the opponent; <b>right-drag</b> to aim his velocity (direction and speed). A point is a <b>winner</b> (green) only if some legal ball reaches it that he <b>cannot intercept</b> within his <b>reach</b> before the ball's second bounce or it leaves the court; otherwise it's <b style="color:#d24a45">red</b> (his). <b>Hover</b> any cell to preview his best intercept run; <b>left-click</b> a cell to play the exchange in real time.</div>
+  <div class="toggles" id="powerModes" style="margin-top:-2px; display:flex;">
+    <span style="color:var(--muted);">Shot power to each spot:</span>
+    <label><input type="radio" name="pmode" id="pmodeExact" value="exact"> exact-fit</label>
+    <label><input type="radio" name="pmode" id="pmodeMax" value="max" checked> max power</label>
+    <label><input type="radio" name="pmode" id="pmodeMin" value="min"> min to clear net</label>
+  </div>
+
+  <div class="hint" id="hintBall" style="display:none;">Drag the <b style="color:var(--accent)">blue dot</b> (you). Color = <b>fastest ball arrival in seconds</b>. The visible area includes the <b>doubles court, side tramlines, and back/side outfields</b>. In <b>bounces</b> mode, hover any cell to see that shot's trajectory and its 45° shadow. <b>Right-click</b> any spot to spray 100 perturbed balls at it and tally winners / intercepted / out. Enable the opponent to switch to a difference map.</div>
+  <div class="hint" id="hintOpp" style="display:block;"><b>Left-drag</b> the <b style="color:var(--opp)">coral dot</b> to move the opponent. A point is a <b>winner</b> (green) only if some legal ball reaches it that he <b>cannot intercept</b> within his <b>reach</b> before the ball's second bounce or it leaves the court; otherwise it's <b style="color:#d24a45">red</b> (his). <b>Hover</b> any cell to preview his best intercept run; <b>left-click</b> a cell to play the exchange in real time; <b>right-click</b> a spot to spray 100 perturbed balls and tally winners / intercepted / out.</div>
 
   <canvas id="court"></canvas>
   <canvas id="cbar"></canvas>
@@ -132,6 +140,31 @@
   function computeGeom(){const pw=cv.width/DPR,ph=cv.height/DPR,mx=12,my=12;geom={mx,my,sx:(pw-2*mx)/(VX1-VX0),sy:(ph-2*my)/(VY1-VY0),pw,ph};}
   function toPx(cx,cy){return{px:geom.mx+(cx-VX0)*geom.sx,py:geom.my+(cy-VY0)*geom.sy};}
   function toCourt(px,py){return{x:(px-geom.mx)/geom.sx+VX0,y:(py-geom.my)/geom.sy+VY0};}
+  // Solve the launch that (a) crosses the net plane at exactly height zNetTarget and (b) lands its
+  // first bounce at horizontal distance dTarget along the aim line from (sx,sy,h). dNet is the
+  // horizontal distance from the launch to the net plane. Returns {v,vh,vv,th} or null if the
+  // required shot is nonphysical (negative speed², net behind the target, etc).
+  function solveShotNetHeight(h, dNet, dTarget, zNetTarget){
+    if(dNet<=0.05 || dTarget<=dNet+0.05) return null;   // target must be beyond the net
+    // height(d) = h + d*m - A*d^2, with m=tanθ, A=g/(2 v^2 cos^2θ).
+    //   zNetTarget = h + dNet*m    - A*dNet^2
+    //   0          = h + dTarget*m - A*dTarget^2
+    // Solve the 2x2 linear system for (m, A).
+    const b1=zNetTarget-h, b2=-h;
+    const det = dNet*(-dTarget*dTarget) - (-dNet*dNet)*dTarget;   // dNet*(-dT^2) + dN^2*dT
+    if(Math.abs(det)<1e-9) return null;
+    const m = (b1*(-dTarget*dTarget) - (-dNet*dNet)*b2)/det;
+    const A = (dNet*b2 - b1*dTarget)/det;
+    if(A<=1e-9) return null;                       // A>0 required (gravity term)
+    const th=Math.atan(m);
+    if(th>MAX_LAUNCH||th<-0.4) return null;
+    const cos=Math.cos(th);
+    const v2 = g/(2*A*cos*cos);
+    if(v2<=0) return null;
+    const v=Math.sqrt(v2);
+    return {v, vh:v*cos, vv:v*Math.sin(th), th};
+  }
+
   function netHeightAt(y){const cy=Math.max(0,Math.min(W,y));const f=Math.abs(cy-W/2)/(W/2);return NET_H+(NET_H_POST-NET_H)*f;}
   // Does a shot from (sx,sy,h) heading (ux,uy) with horiz/vert speed (vh,vv) clear the net?
   function clearsNet(sx,sy,h,ux,uy,vh,vv){
@@ -155,7 +188,7 @@
     return [(-b+s)/(2*a), (-b-s)/(2*a)].map(u=>Math.atan(u));
   }
 
-  function computeBall(vmax,h,reachH,serveMode,quality,oppCtx,MODE,PMODE){
+  function computeBall(vmax,h,reachH,serveMode,quality,oppCtx,MODE,PMODE,NOH){
     const TX=quality?TXF:TXL, TY=quality?TYF:TYL, NS=quality?NS_FULL:NS_LOW;
     timeGrid=new Float32Array(GX*GY).fill(-1);
     airGrid=new Uint8Array(GX*GY);
@@ -267,35 +300,51 @@
       const tx0=NET_X, tx1=serveMode?(NET_X+SERVICE):L;
       // speed list, ascending
       const speeds=[]; for(let si=0; si<NSB; si++){ const frac=(si+0.5)/NSB; speeds.push(VMIN+(vmax-VMIN)*frac*frac); }
+      // sub-targets within each cell so integration drift never leaves a cell empty
+      const SUB = quality ? 3 : 2;     // SUB x SUB aim points per cell
       for(let ix=0; ix<GX; ix++){
-        const tx=FAR0+(ix+0.5)*cellW;
-        if(tx<tx0-0.2||tx>tx1+0.2) continue;
+        const txc=FAR0+(ix+0.5)*cellW;
+        if(txc<tx0-0.2||txc>tx1+0.2) continue;
         for(let iy=0; iy<GY; iy++){
-          const ty=VY0+(iy+0.5)*cellH;
-          if(ty<-0.2||ty>W+0.2) continue;           // first bounce must be within singles width
-          const dx=tx-yx, dy=ty-yy, d=Math.hypot(dx,dy);
-          if(d<0.2) continue;
-          const ux=dx/d, uy=dy/d;
-          // collect (v,th) shots whose first bounce actually lands in this cell
-          const cand=[];
-          for(const v of speeds){
-            for(const th of anglesFor(d,h,v)){
-              if(th>MAX_LAUNCH||th<-0.4) continue;
-              const vh=v*Math.cos(th), vv=v*Math.sin(th);
-              if(vh<=0.03) continue;
-              if(!clearsNet(yx,yy,h,ux,uy,vh,vv)) continue;   // must clear the net plane
-              cand.push({v,vh,vv});
+          const tyc=VY0+(iy+0.5)*cellH;
+          if(tyc<-0.2||tyc>W+0.2) continue;
+          for(let sxi=0; sxi<SUB; sxi++) for(let syi=0; syi<SUB; syi++){
+            const tx=FAR0+(ix+(sxi+0.5)/SUB)*cellW;
+            const ty=VY0+(iy+(syi+0.5)/SUB)*cellH;
+            if(ty<-0.2||ty>W+0.2) continue;           // first bounce must be within singles width
+            const dx=tx-yx, dy=ty-yy, d=Math.hypot(dx,dy);
+            if(d<0.2) continue;
+            const ux=dx/d, uy=dy/d;
+            // net-crossing geometry along this aim line
+            const dNet=(NET_X-yx)/ux, yNet=yy+uy*dNet;
+            const zNetTgt=netHeightAt(yNet)+NOH;      // absolute height to cross the net at
+            // Primary shot: solved to clear the net at the target height AND land in the cell.
+            const s=solveShotNetHeight(h, dNet, d, zNetTgt);
+            if(s && clearsNet(yx,yy,h,ux,uy,s.vh,s.vv)){
+              traceShot(ux,uy,s.vh,s.vv);
+              continue;                                // one solved shot per sub-target
             }
-          }
-          if(!cand.length) continue;
-          if(PMODE==='exact'){
-            for(const c of cand) traceShot(ux,uy,c.vh,c.vv);          // every fitting shot
-          } else if(PMODE==='max'){
-            let mx=cand[0]; for(const c of cand) if(c.v>mx.v) mx=c;    // highest power
-            traceShot(ux,uy,mx.vh,mx.vv);
-          } else { // min: slowest that still clears net & reaches cell — traceShot enforces net
-            let mn=cand[0]; for(const c of cand) if(c.v<mn.v) mn=c;    // lowest power
-            traceShot(ux,uy,mn.vh,mn.vv);
+            // Fallback (solve failed for this geometry): power-mode speed selection.
+            const cand=[];
+            for(const v of speeds){
+              for(const th of anglesFor(d,h,v)){
+                if(th>MAX_LAUNCH||th<-0.4) continue;
+                const vh=v*Math.cos(th), vv=v*Math.sin(th);
+                if(vh<=0.03) continue;
+                if(!clearsNet(yx,yy,h,ux,uy,vh,vv)) continue;
+                cand.push({v,vh,vv});
+              }
+            }
+            if(!cand.length) continue;
+            if(PMODE==='exact'){
+              for(const c of cand) traceShot(ux,uy,c.vh,c.vv);
+            } else if(PMODE==='max'){
+              let mx=cand[0]; for(const c of cand) if(c.v>mx.v) mx=c;
+              traceShot(ux,uy,mx.vh,mx.vv);
+            } else {
+              let mn=cand[0]; for(const c of cand) if(c.v<mn.v) mn=c;
+              traceShot(ux,uy,mn.vh,mn.vv);
+            }
           }
         }
       }
@@ -610,6 +659,25 @@
       }
     }
 
+    // second-ply return map (your side), SYMMETRIC with the main map: green = the opponent's
+    // return beats YOU (his winner, keyed by his margin); red = you cover it. Same colors/logic
+    // as the opponent-side map, just with the roles of hitter and defender swapped.
+    if(returnMap){
+      for(let ix=0;ix<GX;ix++)for(let iy=0;iy<GY;iy++){
+        const val=returnMap.grid[ix*GY+iy];
+        if(val<=-2) continue;                       // untargeted
+        const farX=FAR0+ix*cellW; const tx=NET_X-(farX-NET_X)-cellW;   // mirror, cell origin
+        const p=toPx(tx, VY0+iy*cellH);
+        const wpx=cellW*geom.sx+0.6, hpx=cellH*geom.sy+0.6;
+        if(val>=0){ ctx.fillStyle=rampDiff(val); ctx.globalAlpha=0.8; }   // his winner (green by margin)
+        else { ctx.fillStyle='#d24a45'; ctx.globalAlpha=0.72; }           // you cover it (red)
+        ctx.fillRect(p.px,p.py,wpx,hpx); ctx.globalAlpha=1;
+      }
+      // mark the opponent's contact point (origin of his return)
+      const fp=toPx(returnMap.from.x, returnMap.from.y);
+      ctx.beginPath(); ctx.arc(fp.px,fp.py,4,0,Math.PI*2); ctx.fillStyle='#993c1d'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+    }
+
     if(showOpp){
       // faint interior margin contours within the winner region
       const marginAt=(ix,iy)=>{const idx=ix*GY+iy;const tb=timeGrid[idx];if(tb<0)return NaN;const to=oppGrid[idx];return to<0?NaN:to-tb;};
@@ -665,19 +733,41 @@
       ctx.beginPath(); ctx.arc(ipt.px,ipt.py,4,0,Math.PI*2); ctx.fillStyle='#993c1d'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.2; ctx.stroke();
     }
 
+    // spray of 100 perturbed balls (right-click, opponent off)
+    if(sprayResult){
+      const COL={win:'rgba(29,158,117,0.5)', intercept:'rgba(153,60,29,0.45)', out:'rgba(140,140,140,0.35)', net:'rgba(60,90,160,0.4)'};
+      for(const b of sprayResult.balls){
+        ctx.beginPath();
+        for(let i=0;i<b.traj.length;i++){ const q=toPx(b.traj[i].x,b.traj[i].y); if(i===0)ctx.moveTo(q.px,q.py); else ctx.lineTo(q.px,q.py); }
+        ctx.strokeStyle=COL[b.cls]; ctx.lineWidth=1; ctx.stroke();
+        // mark first bounce
+        let fb=null; for(let k=1;k<b.traj.length;k++){ if(b.traj[k].bounce){ fb=b.traj[k]; break; } }
+        if(fb){ const q=toPx(fb.x,fb.y); ctx.beginPath(); ctx.arc(q.px,q.py,1.6,0,Math.PI*2); ctx.fillStyle=COL[b.cls].replace(/0\.\d+/,'0.9'); ctx.fill(); }
+      }
+      // target marker
+      const tp=toPx(sprayResult.at.x, sprayResult.at.y);
+      ctx.beginPath(); ctx.arc(tp.px,tp.py,4,0,Math.PI*2); ctx.strokeStyle='#333'; ctx.lineWidth=1.5; ctx.stroke();
+      // tally box
+      const c=sprayResult.counts;
+      const bx=tp.px+10, by=tp.py-58; const bw=124, bh=74;
+      const bxc=Math.min(bx, geom.pw-bw-6);
+      ctx.fillStyle='rgba(255,255,255,0.92)'; ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.roundRect(bxc, by, bw, bh, 6); ctx.fill(); ctx.stroke();
+      ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.font='600 11px sans-serif';
+      ctx.fillStyle='#1d9e75'; ctx.fillText('winners: '+c.win, bxc+9, by+17);
+      ctx.fillStyle='#993c1d'; ctx.fillText('intercepted: '+c.intercept, bxc+9, by+34);
+      ctx.fillStyle='#7a7a7a'; ctx.fillText('out: '+c.out, bxc+9, by+51);
+      ctx.fillStyle='#3c5aa0'; ctx.fillText('into net: '+c.net, bxc+9, by+68);
+    }
+
     const pe=toPx(state.you.x,state.you.y);
     ctx.beginPath(); ctx.arc(pe.px,pe.py,9,0,Math.PI*2); ctx.fillStyle='#185fa5'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
     ctx.fillStyle='#fff'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('Y',pe.px,pe.py);
 
-    if(showOpp){
+    if(showOpp || sprayResult){
       const po=toPx(state.opp.x,state.opp.y);
       // reach circle
       ctx.beginPath(); ctx.arc(po.px,po.py,(+ORR.value)*geom.sx,0,Math.PI*2); ctx.strokeStyle='rgba(153,60,29,0.35)'; ctx.lineWidth=1; ctx.stroke();
-      const tip=toPx(state.opp.x+state.oppVel.x*0.35, state.opp.y+state.oppVel.y*0.35);
-      ctx.strokeStyle='#993c1d'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.moveTo(po.px,po.py); ctx.lineTo(tip.px,tip.py); ctx.stroke();
-      const ang=Math.atan2(tip.py-po.py,tip.px-po.px), ah=7;
-      ctx.beginPath(); ctx.moveTo(tip.px,tip.py); ctx.lineTo(tip.px-ah*Math.cos(ang-0.4),tip.py-ah*Math.sin(ang-0.4)); ctx.lineTo(tip.px-ah*Math.cos(ang+0.4),tip.py-ah*Math.sin(ang+0.4)); ctx.closePath(); ctx.fillStyle='#993c1d'; ctx.fill();
-      ctx.beginPath(); ctx.arc(tip.px,tip.py,5,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle='#993c1d'; ctx.lineWidth=1.5; ctx.stroke();
       ctx.beginPath(); ctx.arc(po.px,po.py,9,0,Math.PI*2); ctx.fillStyle='#993c1d'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
       ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('O',po.px,po.py);
     }
@@ -710,11 +800,12 @@
     const pmode=document.getElementById('pmodeMax').checked?'max':(document.getElementById('pmodeMin').checked?'min':'exact');
     document.getElementById('powerModes').style.display = (mode==='bounce') ? 'flex' : 'none';
     const run=()=>{
+      sprayResult=null; returnMap=null; returnPinned=false;   // any recompute clears overlays
       let oppCtx=null;
       if(op){
         oppCtx={ vmax:+OS.value, react:+ORX.value, accel:+OA.value, reachH:+RH.value, reach:+ORR.value };
       }
-      lastStats=computeBall(v,h,rh,sm,quality,oppCtx,mode,pmode);
+      lastStats=computeBall(v,h,rh,sm,quality,oppCtx,mode,pmode,+NOH.value);
       if(op) computeOpp(+OS.value,+ORX.value,+OA.value,+ORR.value); // for the 0-line contour + cards
       lastRenderArgs=[lastStats,sm,iso,op];
       render(lastStats,sm,iso,op);
@@ -728,6 +819,8 @@
   function redrawOppOnly(){ draw(false); }
 
   const H=document.getElementById('h'),V=document.getElementById('v'),RH=document.getElementById('rh');
+  const NOH=document.getElementById('noh');
+  const SCV=document.getElementById('scv'),SCA=document.getElementById('sca'),SCD=document.getElementById('scd');
   const SERVE=document.getElementById('serve'),ISO=document.getElementById('iso'),OPP=document.getElementById('opp');
   const OS=document.getElementById('os'),ORX=document.getElementById('orx'),OA=document.getElementById('oa'),ORR=document.getElementById('orr');
   let hiTimer=null;
@@ -735,6 +828,12 @@
   H.addEventListener('input',()=>onSlider('hOut',x=>(+x).toFixed(1),H));
   V.addEventListener('input',()=>onSlider('vOut',x=>x,V));
   RH.addEventListener('input',()=>onSlider('rhOut',x=>(+x).toFixed(1),RH));
+  NOH.addEventListener('input',()=>onSlider('nohOut',x=>(+x).toFixed(2),NOH));
+  // scatter sliders only affect the spray; update label live, re-fire spray if one is shown
+  function onScatter(out,el){ document.getElementById(out).textContent=(+el.value).toFixed(el===SCV?0:1); if(sprayResult) fireSpray(lastSprayPx.cx,lastSprayPx.cy); }
+  SCV.addEventListener('input',()=>onScatter('scvOut',SCV));
+  SCA.addEventListener('input',()=>onScatter('scaOut',SCA));
+  SCD.addEventListener('input',()=>onScatter('scdOut',SCD));
   function onOpp(out,fmt,el){ document.getElementById(out).textContent=fmt(el.value); draw(false); clearTimeout(hiTimer); hiTimer=setTimeout(()=>draw(true),250); }
   OS.addEventListener('input',()=>onOpp('osOut',x=>(+x).toFixed(1),OS));
   ORX.addEventListener('input',()=>onOpp('orxOut',x=>(+x).toFixed(2),ORX));
@@ -760,8 +859,6 @@
     const py=toPx(state.you.x,state.you.y); if(Math.hypot(cx-py.px,cy-py.py)<18) return 'you';
     if(OPP.checked){
       const po=toPx(state.opp.x,state.opp.y);
-      const tip=toPx(state.opp.x+state.oppVel.x*0.35,state.opp.y+state.oppVel.y*0.35);
-      if(Math.hypot(cx-tip.px,cy-tip.py)<16) return 'vel';
       if(Math.hypot(cx-po.px,cy-po.py)<18) return 'opp';
     }
     return null;
@@ -770,12 +867,13 @@
     const{cx,cy}=evtPos(e);
     const right = (e.button===2);
     if(right){
-      // right-click: set opponent's velocity direction (from him toward the cursor)
-      if(OPP.checked){ drag='vel'; setOppVelFromCursor(cx,cy); e.preventDefault(); }
+      fireSpray(cx,cy); e.preventDefault();   // right-click always sprays (opp velocity disabled)
       return;
     }
     // left-click: grab a position handle (you / opponent)
+    if(sprayResult){ sprayResult=null; rerender(); }
     const h=hit(cx,cy);
+    if(h){ returnMap=null; returnPinned=false; }   // dragging a player clears a pinned return map
     drag = (h==='vel') ? 'opp' : h;   // left-click near the arrow still moves the opponent
     if(drag) e.preventDefault();
   }
@@ -795,7 +893,7 @@
   }
   function end(){ if(drag){const wasDrag=drag; drag=null; draw(true);} }
   cv.addEventListener('mousedown',start); window.addEventListener('mousemove',move); window.addEventListener('mouseup',end);
-  cv.addEventListener('contextmenu',e=>{ if(OPP.checked){ e.preventDefault(); } });  // allow right-drag
+  cv.addEventListener('contextmenu',e=>e.preventDefault());  // right-drag aims opp / fires spray
   cv.addEventListener('touchstart',start,{passive:false}); cv.addEventListener('touchmove',move,{passive:false}); cv.addEventListener('touchend',end);
 
   // Hover: show the trajectory stored for the cell under the cursor. In opponent mode also
@@ -812,18 +910,202 @@
     let shot=null;
     if(ix>=0&&ix<GX&&iy>=0&&iy<GY && shotGrid){ shot=shotGrid[ix*GY+iy]||null; }
     if(shot!==hoverShot){
-      hoverShot=shot; hoverIntercept=null;
+      hoverShot=shot; hoverIntercept=null; if(!returnPinned) returnMap=null;
       if(shot && inOpp){
         const opp=oppParams();
         const traj=buildTrajectory(shot);
         const ic=solveIntercept(traj, opp, resolveTime(traj));
-        if(ic){ hoverIntercept={ pt:ic.pt, path:oppPathTo(ic.pt, opp, ic.oppArr) }; }
+        if(ic){
+          hoverIntercept={ pt:ic.pt, path:oppPathTo(ic.pt, opp, ic.oppArr) };
+          // second ply: only if he actually intercepts (reachable) — then he returns the ball and
+          // we map whether YOU can handle his return from that point/time.
+          if(ic.reachable && !returnPinned){ returnMap=computeReturnMap(ic.pt, ic.pt.t); }
+        }
       }
       rerender(); cv.style.cursor=shot?'pointer':'default';
     }
   }
-  function hoverLeave(){ if(!anim && hoverShot){hoverShot=null;hoverIntercept=null;rerender();} }
+  function hoverLeave(){ if(!anim && !returnPinned && hoverShot){hoverShot=null;hoverIntercept=null;returnMap=null;rerender();} }
   function oppParams(){ return { vmax:+OS.value, react:+ORX.value, accel:+OA.value, reach:+ORR.value, reachH:+RH.value }; }
+
+  let sprayResult=null;   // { balls:[{traj,cls}], counts:{win,intercept,out}, at:{x,y} }
+  let returnMap=null;     // second-ply: {grid:Float32Array, from:{x,y}, tHit} — your coverage of opp's returns
+  let returnPinned=false; // when true (set on click), hover moves don't clear the return map
+
+  // Second-ply reachability. The opponent intercepted your shot at point P (x,y) at time tHit and
+  // now hits a RETURN from there. We sweep his possible returns to every cell on YOUR half and ask
+  // whether YOU (the defender, at state.you, starting from tHit) can reach each return before its
+  // 2nd bounce. The grid stores, per YOUR-side cell, your time margin (>=0 you get it, else miss);
+  // -1 = no legal return lands there. This mirrors the first map with roles swapped.
+  function computeReturnMap(P, tHit){
+    const grid=new Float32Array(GX*GY).fill(-2);   // -2 = untargeted
+    const h=+RH.value*0.4+0.5;                      // opponent contacts around mid-reach height
+    const vmax=+V.value;
+    const you={ vmax:+OS.value, react:+ORX.value, accel:+OA.value, reach:+ORR.value, reachH:+RH.value,
+                x:state.you.x, y:state.you.y };
+    const cellW=(FAR1-FAR0)/GX, cellH=(VY1-VY0)/GY;
+    const STRIDE=3;                                 // coarse grid for hover responsiveness
+    const speeds=[]; for(let si=0; si<12; si++){ const frac=(si+0.5)/12; speeds.push(VMIN+(vmax-VMIN)*frac*frac); }
+    for(let ix=0; ix<GX; ix+=STRIDE){
+      const farX=FAR0+(ix+0.5)*cellW;
+      const tx=NET_X-(farX-NET_X);                  // mirror to your side
+      if(tx<0 || tx>NET_X) continue;
+      for(let iy=0; iy<GY; iy+=STRIDE){
+        const ty=VY0+(iy+0.5)*cellH;
+        if(ty<-0.1||ty>W+0.1) continue;
+        const dx=tx-P.x, dy=ty-P.y, d=Math.hypot(dx,dy);
+        if(d<0.3) continue;
+        const ux=dx/d, uy=dy/d;
+        let bestTraj=null, bestT=Infinity;
+        for(const v of speeds){
+          for(const th of anglesFor(d,h,v)){
+            if(th>MAX_LAUNCH||th<-0.4) continue;
+            const vh=v*Math.cos(th), vv=v*Math.sin(th);
+            if(vh<=0.03) continue;
+            if(!clearsNetFrom(P.x,P.y,h,ux,uy,vh,vv)) continue;
+            const tr=buildTrajectoryFrom(P.x,P.y,{ux,uy,vh,vv,h}, tHit);
+            let fb=null; for(let k=1;k<tr.length;k++){ if(tr[k].bounce){ fb=tr[k]; break; } }
+            if(!fb) continue;
+            if(fb.x<0-0.01||fb.x>NET_X+0.01||fb.y<-0.01||fb.y>W+0.01) continue;
+            if(fb.t<bestT){ bestT=fb.t; bestTraj=tr; }
+          }
+        }
+        let val=-2;
+        if(bestTraj){
+          const ex=defenderReaches(bestTraj, you, tHit);
+          // SYMMETRIC with the main map (green = the hitter's shot beats the defender). Here the
+          // opponent is the hitter of the return and YOU are the defender: green = his return
+          // beats you (a winner for him), keyed by HIS margin; a "covered" flag = you reach it.
+          if(ex.reachable){ val=-1; }                 // you cover it (like opponent-owned: red)
+          else { val=Math.max(0, -ex.margin); }       // his winner; margin = how badly you miss
+        }
+        // paint the STRIDE block with this value
+        for(let jx=ix;jx<Math.min(ix+STRIDE,GX);jx++) for(let jy=iy;jy<Math.min(iy+STRIDE,GY);jy++) grid[jx*GY+jy]=val;
+      }
+    }
+    return { grid, from:{x:P.x,y:P.y}, tHit };
+  }
+
+  // Net clearance for a shot originating anywhere (used for opponent returns crossing back).
+  function clearsNetFrom(sx,sy,h,ux,uy,vh,vv){
+    if(ux*vh===0) return true;
+    const tNet=(NET_X-sx)/(ux*vh);
+    if(tNet<=0) return true;
+    const zNet=h+vv*tNet-0.5*g*tNet*tNet;
+    const yNet=sy+uy*vh*tNet;
+    return zNet>=netHeightAt(yNet);
+  }
+  // Build a trajectory from an arbitrary origin (sx,sy) with a start clock offset t0.
+  function buildTrajectoryFrom(sx,sy,shot,t0){
+    const {ux,uy,vh,vv,h}=shot; const dt=0.004, REST=0.73;
+    const pts=[]; let px=sx,py=sy,z=h,vz=vv,t=t0||0;
+    for(let s=0;s<2400;s++){
+      pts.push({x:px,y:py,z:z,t:t,bounce:false});
+      const nz=z+vz*dt-0.5*g*dt*dt;
+      if(nz<=0 && vz<0){ px+=ux*vh*dt; py+=uy*vh*dt; t+=dt; pts.push({x:px,y:py,z:0,t:t,bounce:true}); z=0; vz=Math.abs(vz)*REST; break; }
+      px+=ux*vh*dt; py+=uy*vh*dt; z=nz; vz-=g*dt; t+=dt;
+      if(px<VX0-1||px>VX1+1||py<VY0-1||py>VY1+1||t-(t0||0)>6) break;
+    }
+    let bounces=0;
+    while(bounces<2 && z===0){
+      let zz=0, vzz=vz, stepped=false;
+      for(let s=0;s<1400;s++){
+        const nzz=zz+vzz*dt-0.5*g*dt*dt;
+        if(nzz<=0 && vzz<0){ px+=ux*vh*dt; py+=uy*vh*dt; t+=dt; pts.push({x:px,y:py,z:0,t:t,bounce:true}); vz=Math.abs(vzz)*REST; stepped=true; break; }
+        px+=ux*vh*dt; py+=uy*vh*dt; zz=nzz; vzz-=g*dt; t+=dt;
+        pts.push({x:px,y:py,z:zz,t:t,bounce:false});
+        if(px<VX0-1||px>VX1+1||py<VY0-1||py>VY1+1) {stepped=false;break;}
+      }
+      if(!stepped||vz<0.4) break;
+      bounces++;
+    }
+    return pts;
+  }
+  // Can a defender reach a ball's trajectory before it resolves? Returns {reachable, margin}:
+  // margin>0 = time to spare when reached; margin<0 = how much time short when missed.
+  function defenderReaches(traj, defender, tStart){
+    const tRes=resolveTime(traj);
+    const savedOpp={x:state.opp.x,y:state.opp.y,vx:state.oppVel.x,vy:state.oppVel.y};
+    state.opp.x=defender.x; state.opp.y=defender.y; state.oppVel.x=0; state.oppVel.y=0;
+    const ic=solveIntercept(traj, defender, tRes);
+    let reachable=false, margin=0;
+    if(ic && ic.reachable){ reachable=true; margin=tRes-ic.pt.t; }
+    else if(ic){ margin = -Math.max(0, ic.delay!=null? ic.delay : 0); }   // negative = miss amount
+    state.opp.x=savedOpp.x; state.opp.y=savedOpp.y; state.oppVel.x=savedOpp.vx; state.oppVel.y=savedOpp.vy;
+    return {reachable, margin};
+  }
+
+  // Find a base shot to target (tx,ty). If a net-height target is set, solve the shot that clears
+  // the net at that height and lands at the target (matches the map). Else fall back to power mode.
+  function baseShotTo(tx,ty){
+    const h=+H.value, vmax=+V.value, yx=state.you.x, yy=state.you.y;
+    const dx=tx-yx, dy=ty-yy, d=Math.hypot(dx,dy);
+    if(d<0.2) return null;
+    const ux=dx/d, uy=dy/d;
+    if(ux<=0.01) return null;
+    const dNet=(NET_X-yx)/ux, yNet=yy+uy*dNet;
+    const zNetTgt=netHeightAt(yNet)+(+NOH.value);
+    const s=solveShotNetHeight(h, dNet, d, zNetTgt);
+    if(s && clearsNet(yx,yy,h,ux,uy,s.vh,s.vv)) return {v:s.v, ux, uy, h, th:s.th};
+    // fallback: power-mode selection
+    const pmode=document.getElementById('pmodeMax').checked?'max':(document.getElementById('pmodeMin').checked?'min':'exact');
+    const cand=[];
+    for(let si=0; si<40; si++){
+      const frac=(si+0.5)/40, v=VMIN+(vmax-VMIN)*frac*frac;
+      for(const th of anglesFor(d,h,v)){
+        if(th>MAX_LAUNCH||th<-0.4) continue;
+        const vh=v*Math.cos(th), vv=v*Math.sin(th);
+        if(vh<=0.03) continue;
+        if(!clearsNet(yx,yy,h,ux,uy,vh,vv)) continue;
+        cand.push({v, ux, uy, h, th});
+      }
+    }
+    if(!cand.length) return null;
+    if(pmode==='max'){ let b=cand[0]; for(const c of cand) if(c.v>b.v) b=c; return b; }
+    if(pmode==='min'){ let b=cand[0]; for(const c of cand) if(c.v<b.v) b=c; return b; }
+    return cand[Math.floor(cand.length/2)];
+  }
+  let lastSprayPx={cx:0,cy:0};
+
+  // Right-click: fire 100 balls perturbed in speed, launch angle and aim direction around the
+  // base shot to the clicked spot; classify each as NET (fails to clear the net), OUT (clears the
+  // net but first bounce lands outside the singles court), INTERCEPTED (opponent reaches it before
+  // the point resolves), or WINNER (unreturnable, in-court).
+  function fireSpray(cx,cy){
+    lastSprayPx={cx,cy};
+    const c=toCourt(cx,cy);
+    const base=baseShotTo(c.x, c.y);
+    if(!base){ sprayResult=null; rerender(); return; }
+    const opp=oppParams();
+    const h=+H.value;
+    const sPow=(+SCV.value)/100, sAng=(+SCA.value)*Math.PI/180, sDir=(+SCD.value)*Math.PI/180;
+    const balls=[]; let win=0, intercept=0, out=0, net=0;
+    const baseAng=Math.atan2(base.uy, base.ux);
+    for(let i=0;i<100;i++){
+      // perturbations from the scatter sliders: speed ±sPow, launch angle ±sAng, aim ±sDir
+      const vp = base.v * (1 + (Math.random()*2-1)*sPow);
+      const thp = base.th + (Math.random()*2-1)*sAng;
+      const dirp = baseAng + (Math.random()*2-1)*sDir;
+      const ux=Math.cos(dirp), uy=Math.sin(dirp);
+      const vh=vp*Math.cos(thp), vv=vp*Math.sin(thp);
+      if(vh<=0.03) continue;
+      const traj=buildTrajectory({ux,uy,vh,vv,h});
+      let fb=null; for(let k=1;k<traj.length;k++){ if(traj[k].bounce){ fb=traj[k]; break; } }
+      let cls;
+      if(!clearsNet(state.you.x,state.you.y,h,ux,uy,vh,vv)){ cls='net'; net++; }
+      else {
+        const inCourt = fb && fb.x>=NET_X-0.01 && fb.x<=L+0.01 && fb.y>=-0.01 && fb.y<=W+0.01;
+        if(!inCourt){ cls='out'; out++; }
+        else {
+          const ex=simulateExchange(traj, opp);
+          if(ex.win){ cls='win'; win++; } else { cls='intercept'; intercept++; }
+        }
+      }
+      balls.push({traj, cls});
+    }
+    sprayResult={ balls, counts:{win, intercept, out, net}, at:{x:c.x, y:c.y} };
+    rerender();
+  }
   cv.addEventListener('mousemove',hover);
   cv.addEventListener('mouseleave',hoverLeave);
 
@@ -838,6 +1120,9 @@
     const tEnd = intercepted ? tHit : tResolve;
     const target = ex && ex.hit ? {x:ex.hit.x,y:ex.hit.y} : (traj[traj.length-1]);
     const oppPath = oppPathTo(target, opp, tEnd);
+    // second ply: if intercepted, compute the return map from the actual interception point/time
+    if(intercepted){ returnMap=computeReturnMap({x:ex.hit.x,y:ex.hit.y}, ex.hit.t); returnPinned=true; }
+    else { returnMap=null; returnPinned=false; }
     anim={ traj, oppPath, tEnd, intercepted, hit:ex.hit, t0:performance.now(), reach:+ORR.value, reachH:+RH.value };
     requestAnimationFrame(stepAnim);
   }
